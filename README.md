@@ -34,3 +34,31 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+
+## 🎬 Movie Site Structure
+
+This project uses a well-organized folder structure:
+
+- `src/app/*` - Next.js app router pages
+- `src/components/*` - Reusable React components
+- `src/lib/*` - Utility functions and API helpers
+- `src/types/*` - TypeScript type definitions
+- `src/hooks/*` - Custom React hooks
+- `src/store/*` - State management
+- `src/data/*` - Static data files
+
+### Key Features:
+- Movie listing and details pages
+- Search functionality
+- Category/year/language/quality filtering
+- Responsive design with Tailwind CSS
+- Type-safe with TypeScript
+
+### Getting Started:
+```bash
+npm install
+npm run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000) to view the site.

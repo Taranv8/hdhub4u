@@ -1,38 +1,82 @@
-// src/app/api/search/route.ts
+// app/api/search/route.ts
+import { NextResponse } from 'next/server';
+import { searchMovies } from '@/lib/controllers/searchController';
 
-import { NextRequest, NextResponse } from 'next/server';
-import type { Movie, ApiResponse } from '@/types/movie';
-
-export async function GET(request: NextRequest) {
+export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
-    const query = searchParams.get('q')?.toLowerCase() || '';
-
-    if (!query) {
-      return NextResponse.json({ data: [] });
+    const query = searchParams.get('query') || '';
+    const page = parseInt(searchParams.get('page') || '1');
+    
+    // Validate inputs
+    if (!query || query.trim() === '') {
+      return NextResponse.json(
+        { success: false, error: 'Search query is required' },
+        { status: 400 }
+      );
     }
-
-    // Mock search - Replace with actual database search
-    const mockResults: Movie[] = Array.from({ length: 20 }, (_, i) => ({
-      id: `search-${i + 1}`,
-      slug: `search-result-${i + 1}`,
-      title: `${query} Movie ${i + 1} (2025) WEB-DL Hindi 1080p`,
-      poster: `https://image.tmdb.org/t/p/w342/placeholder.jpg`,
-      thumbnail: `https://image.tmdb.org/t/p/w342/placeholder.jpg`,
-      year: '2025',
-      quality: '1080p',
-      categories: ['Bollywood'],
-    }));
-
-    const response: ApiResponse<Movie[]> = {
-      data: mockResults,
-      total: mockResults.length,
-    };
-
-    return NextResponse.json(response);
+    
+    if (page < 1 || isNaN(page)) {
+      return NextResponse.json(
+        { success: false, error: 'Page number must be a positive integer' },
+        { status: 400 }
+      );
+    }
+    
+    // Search movies using controller
+    const result = await searchMovies(query.trim(), page);
+    
+    if (!result.success) {
+      return NextResponse.json(
+        { success: false, error: result.error },
+        { status: 500 }
+      );
+    }
+    
+    return NextResponse.json(result);
   } catch (error) {
+    console.error('Search API Error:', error);
     return NextResponse.json(
-      { data: [], error: 'Search failed' },
+      { success: false, error: 'Internal server error' },
+      { status: 500 }
+    );
+  }
+}
+
+export async function POST(request: Request) {
+  try {
+    const body = await request.json();
+    const query = body.query || '';
+    const page = parseInt(body.page) || 1;
+    
+    if (!query || query.trim() === '') {
+      return NextResponse.json(
+        { success: false, error: 'Search query is required' },
+        { status: 400 }
+      );
+    }
+    
+    if (page < 1 || isNaN(page)) {
+      return NextResponse.json(
+        { success: false, error: 'Page number must be a positive integer' },
+        { status: 400 }
+      );
+    }
+    
+    const result = await searchMovies(query.trim(), page);
+    
+    if (!result.success) {
+      return NextResponse.json(
+        { success: false, error: result.error },
+        { status: 500 }
+      );
+    }
+    
+    return NextResponse.json(result);
+  } catch (error) {
+    console.error('Search API Error:', error);
+    return NextResponse.json(
+      { success: false, error: 'Internal server error' },
       { status: 500 }
     );
   }

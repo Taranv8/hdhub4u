@@ -13,6 +13,63 @@ import styled from '@emotion/styled';
 import DateRangeIcon from '@mui/icons-material/DateRange';
 import FolderIcon from '@mui/icons-material/Folder';
 import GridViewSharpIcon from '@mui/icons-material/GridViewSharp';
+import DownloadLink from '@/components/DownloadLink';
+import EpisodeLink from '@/components/EpisodeLink';
+import SearchBox from '@/components/sections/SearchBox';
+import BestMonthlyMovies from '@/components/sections/BestMonthlyMovies';
+import CategoryList from '@/components/sections/CategoryList';
+import type { Movie, Category } from '@/types/movie';
+import { MAIN_CATEGORIES, GENRES } from '@/lib/constants/categories';
+
+// Helper function to generate slug from title
+function generateSlug(title: string): string {
+  return title
+    .toLowerCase()
+    .replace(/[^\w\s-]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+    .trim();
+}
+async function getTopMonthlyMovies() {
+  try {
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+    
+    const response = await fetch(`${baseUrl}/api/monthly-movies`, {
+      next: { revalidate: 300 }
+    });
+
+    const data = await response.json();
+    // console.log('Monthly movies data:', data); // ADD THIS LINE
+
+    if (!data.success || !data.data) {
+      throw new Error(data.error || 'Failed to fetch monthly movies');
+    }
+
+    return data.data.map((movie: any) => ({
+      ...movie,
+      slug: generateSlug(movie.title),
+    }));
+  } catch (error) {
+    console.error('Error fetching monthly movies:', error);
+    return [];
+  }
+}
+async function getCategories(): Promise<Category[]> {
+  const allCategories = [
+    ...MAIN_CATEGORIES.map(cat => ({ 
+      id: cat.slug, 
+      name: cat.name, 
+      slug: cat.slug 
+    })),
+    ...GENRES.map(genre => ({ 
+      id: genre.toLowerCase(), 
+      name: genre, 
+      slug: genre.toLowerCase() 
+    })),
+  ];
+  
+  return allCategories;
+}
 async function getMovieDetails(id: string) {
   try {
     console.log('=== Getting movie details for ID:', id);
@@ -57,11 +114,21 @@ export default async function MovieDetailPage({
   const genres = movie.genre ? movie.genre.split('|').map(g => g.trim()) : [];
   const starsList = movie.stars ? movie.stars.split(',').map(s => s.trim()) : [];
   const qualityList = movie.quality ? movie.quality.split('|').map(q => q.trim()) : [];
-
+  const categories = await getCategories();
+  const monthlyMovies = await getTopMonthlyMovies();
+  
+ 
   return (
     <div className="min-h-screen bg-black flex flex-col">
       <Header />
+   {/* Best Monthly Movies Section */}
+{monthlyMovies.length > 0 && (
+  <BestMonthlyMovies movies={monthlyMovies} />
+)}
 
+      <div className="flex-1 container mx-auto  py-8">
+        <CategoryList  />
+        </div>
       <main className="flex-1 container mx-auto px-2 py-8 max-w-7xl">
         {/* Two Column Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
@@ -274,92 +341,78 @@ export default async function MovieDetailPage({
               {/* br line */}
               <div className="w-[96%] h-[2px] bg-[#252525] mx-auto mb-4"></div>
 
-              {/* Download Links */}
-              {movie.downloadLinks && movie.downloadLinks.length > 0 && (
-                <div className="bg-black rounded-lg p-6">
-                  <h2
-                    style={{
-                      fontSize: "22px",
-                      fontWeight: 600,
-                      fontStyle: "italic",
-                      color: "#FF0000",
-                      textAlign: "center",
-                      marginBottom: "16px",
-                    }}
-                  >
-                    : DOWNLOAD LINKS :
-                  </h2>
+{/* Download Links */}
+{movie.downloadLinks && movie.downloadLinks.length > 0 && (
+  <div className="bg-black rounded-lg p-6">
+    <h2
+      style={{
+        fontSize: "22px",
+        fontWeight: 600,
+        fontStyle: "italic",
+        color: "#FF0000",
+        textAlign: "center",
+        marginBottom: "16px",
+      }}
+    >
+      : DOWNLOAD LINKS :
+    </h2>
 
-                  {/* Divider below heading */}
-                  <div className="w-[96%] h-[2px] bg-[#252525] mx-auto mb-4"></div>
+    {/* Divider below heading */}
+    <div className="w-[96%] h-[2px] bg-[#252525] mx-auto mb-4"></div>
 
-                  <div>
-                    {movie.downloadLinks.map((link, index) => (
-                      <div key={index}>
-                        <a
-                          href={link.href}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="block text-center p-4 text-[23px] font-[600] tracking-tight text-[#0087fc] hover:text-white transition-colors duration-200"
+    <div>
+      {movie.downloadLinks.map((link, index) => (
+        <div key={index}>
+          <DownloadLink
+            href={link.href}
+            value={link.value}
+            movieId={movie._id}
+            className="block text-center p-4 text-[23px] font-[600] tracking-tight text-[#0087fc] hover:text-white transition-colors duration-200"
+          />
 
-                        >
-                          {link.value}
-                        </a>
+          {index !== movie.downloadLinks.length - 1 && (
+            <div className="w-[96%] h-[2px] bg-[#252525] mx-auto my-3"></div>
+          )}
+        </div>
+      ))}
+    </div>
+  </div>
+)}
 
-                        {/* Divider between links (not after last) */}
-                        {index !== movie.downloadLinks.length - 1 && (
-                          <div className="w-[96%] h-[2px] bg-[#252525] mx-auto my-3"></div>
-                        )}
-                      </div>
-                    ))}
-
-                  </div>
-                </div>
-              )}
- {/* Episode Links */}
+{/* Episode Links */}
 {movie.episodeLinks && movie.episodeLinks.length > 0 && (
   <div className="bg-black rounded-lg p-6 mt-6">
-    {/* Heading */}
     <h2 className="text-center text-[24px] font-[600] italic text-[#FF0000] mb-4">
       EPISODE LINKS
     </h2>
 
-    {/* Episodes */}
     <div>
       {(movie.episodeLinks || []).map((episode, epIndex) => (
         <div key={epIndex} className="mb-6">
-          {/* Episode Title */}
           <h3 className="text-center text-[22px] font-[600] text-[#FF9900] mb-2">
             {episode.episode}
           </h3>
 
-          {/* Loop through each quality */}
           {Object.entries(episode.links || {}).map(([quality, platforms], qIndex) => (
             <div key={qIndex} className="mb-3 flex justify-center flex-wrap gap-2">
-              {/* Quality + Platforms in one line */}
               <span className="text-[18px] font-[600] text-red-600 mr-2">
                 {quality.toUpperCase()} –
               </span>
 
               {Object.entries(platforms || {}).map(([platform, url], pIndex, arr) => (
                 <span key={pIndex} className="text-[18px] font-[600]">
-                  <a
-                    href={url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className={`${
-                      platform.toLowerCase() === "watch" ? "text-teal-400" : "text-blue-500"
-                    } hover:text-white transition-colors duration-200`}
-                  >
-                    {platform}
-                  </a>
+                  <EpisodeLink
+                    url={url}
+                    platform={platform}
+                    movieId={movie._id}
+                    isWatch={platform.toLowerCase() === "watch"}
+                  />
                   {pIndex !== arr.length - 1 && " | "}
                 </span>
               ))}
             </div>
           ))}
 
-          {/* Divider between episodes */}
           {epIndex !== (movie.episodeLinks?.length || 0) - 1 && (
             <div className="w-full h-[2px] bg-[#333] my-4"></div>
           )}
@@ -405,17 +458,13 @@ export default async function MovieDetailPage({
           {/* Right Sidebar (1 column) */}
           <div className="lg:col-span-1">
             <div className="space-y-6  top-4">
-              {/* Search Box */}
-              <div className="bg-[#141414] rounded-lg p-4">
+             {/* Search Box */}
+             <div className="bg-[#141414] rounded-lg p-4">
                 <h3 className="text-lg font-bold text-white mb-3 flex items-center gap-2">
                   <span><GridViewSharpIcon/> </span> Search Here !!
                 </h3>
                 <div className="flex gap-2">
-                  <input
-                    type="text"
-                    placeholder="Search..."
-                    className="flex-1 px-3 py-2 bg-white text-black rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
+                  <SearchBox />
                   <button className="px-4 py-2 bg-gray-700 text-white rounded hover:bg-gray-600 transition-colors">
                     Search
                   </button>

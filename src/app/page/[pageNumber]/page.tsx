@@ -119,7 +119,7 @@ export default async function PageNumberPage({ params }: PageProps) {
       <NoticeBanner />
 
       <main className="flex-1 container mx-auto px-4 py-8">
-        <CategoryList categories={categories} />
+        <CategoryList />
 
         <Suspense fallback={<MovieGridSkeleton />}>
           {movies.length > 0 ? (

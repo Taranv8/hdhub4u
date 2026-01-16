@@ -32,6 +32,11 @@ export interface Movie {
   storyline: string;
   releaseDate: Date;
   episodeLinks?: EpisodeLink[];
+  alltimedownload?: number;
+  monthlydownload?: number;
+  lastResetMonth?: number;
+  lastResetYear?: number;
+  lastDownloadDate?: Date;
 }
 
 export interface PaginationInfo {
@@ -92,6 +97,7 @@ export async function getLatestMovies(
       storyline: movie.storyline || '',
       releaseDate: movie.releaseDate || new Date(),
       episodeLinks: movie.episodeLinks || [], 
+      
     }));
     
     // Get total count for pagination info

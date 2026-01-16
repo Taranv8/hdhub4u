@@ -10,6 +10,8 @@ import Pagination from '@/components/common/Pagination';
 import { MovieGridSkeleton } from '@/components/common/Loading';
 import { MAIN_CATEGORIES, GENRES } from '@/lib/constants/categories';
 import type { Movie, Category } from '@/types/movie';
+import BestMonthlyMovies from '@/components/sections/BestMonthlyMovies';
+
 
 // Fetch movies from the API
 async function getLatestMovies(
@@ -76,7 +78,30 @@ async function getLatestMovies(
     };
   }
 }
+async function getTopMonthlyMovies() {
+  try {
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+    
+    const response = await fetch(`${baseUrl}/api/monthly-movies`, {
+      next: { revalidate: 300 }
+    });
 
+    const data = await response.json();
+    // console.log('Monthly movies data:', data); // ADD THIS LINE
+
+    if (!data.success || !data.data) {
+      throw new Error(data.error || 'Failed to fetch monthly movies');
+    }
+
+    return data.data.map((movie: any) => ({
+      ...movie,
+      slug: generateSlug(movie.title),
+    }));
+  } catch (error) {
+    console.error('Error fetching monthly movies:', error);
+    return [];
+  }
+}
 
 // Helper function to generate slug from title
 function generateSlug(title: string): string {
@@ -118,14 +143,19 @@ const currentPage = parseInt(params.page?.toString() || '1', 10);
 
   const { movies, totalPages } = await getLatestMovies(currentPage);
   const categories = await getCategories();
-
+  const monthlyMovies = await getTopMonthlyMovies();
+  
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
-      <NoticeBanner />
+      {/* <NoticeBanner /> */}
+      {/* Best Monthly Movies Section */}
+{monthlyMovies.length > 0 && (
+  <BestMonthlyMovies movies={monthlyMovies} />
+)}
 
-      <main className="flex-1 container mx-auto px-4 py-8">
-        <CategoryList categories={categories} />
+      <main className="flex-1 container mx-auto  py-8">
+        <CategoryList  />
 
         {/* Latest Releases */}
         <Suspense fallback={<MovieGridSkeleton />}>

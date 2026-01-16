@@ -2,6 +2,14 @@
 import { connectToDatabase } from '../mongodb';
 import { ObjectId } from 'mongodb';
 
+export interface EpisodeLink {
+  episode: string;
+  links: {
+    [quality: string]: {
+      [platform: string]: string;
+    };
+  };
+}
 export interface MovieDetails {
   _id: string;
   title: string;
@@ -14,6 +22,8 @@ export interface MovieDetails {
   director: string;
   language: string;
   quality: string;
+  heading: string,
+
   screenshots: string[];
   downloadLinks: Array<{
     href: string;
@@ -22,6 +32,7 @@ export interface MovieDetails {
   trailer: string;
   storyline: string;
   releaseDate: Date;
+  episodeLinks?: EpisodeLink[];
 }
 
 export async function getMovieById(id: string): Promise<MovieDetails | null> {
@@ -53,6 +64,8 @@ export async function getMovieById(id: string): Promise<MovieDetails | null> {
       shortTitle: movie.shortTitle || '',
       imdbRating: movie.imdbRating || 0,
       genre: movie.genre || '',
+      heading:movie.heading || '',
+
       stars: movie.stars || '',
       director: movie.director || '',
       language: movie.language || '',
@@ -62,6 +75,7 @@ export async function getMovieById(id: string): Promise<MovieDetails | null> {
       trailer: movie.trailer || '',
       storyline: movie.storyline || '',
       releaseDate: movie.releaseDate || new Date(),
+      episodeLinks: movie.episodeLinks || [],
     };
   } catch (error) {
     console.error('Error fetching movie by ID:', error);

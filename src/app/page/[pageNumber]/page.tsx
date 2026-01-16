@@ -1,5 +1,4 @@
-// src/app/page.tsx
-
+// src/app/page/[pageNumber]/page.tsx
 import { Suspense } from 'react';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
@@ -16,7 +15,6 @@ async function getLatestMovies(
   page: number | string = 1
 ): Promise<{ movies: Movie[]; totalPages: number }> {
   try {
-    // Ensure page is a number
     const currentPage = Number(page);
     if (isNaN(currentPage) || currentPage < 1) {
       throw new Error('Invalid page number');
@@ -24,10 +22,10 @@ async function getLatestMovies(
 
     const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
     
-    console.log('Fetching movies for page:', currentPage); // debug
+    console.log('Fetching movies for page:', currentPage);
 
     const response = await fetch(`${baseUrl}/api/homepage?page=${currentPage}`, {
-      next: { revalidate: 0 } // temporarily disable caching for testing
+      next: { revalidate: 0 }
     });
 
     if (!response.ok) {
@@ -40,7 +38,6 @@ async function getLatestMovies(
       throw new Error(data.error || 'Failed to fetch movies');
     }
 
-    // Transform API response to your Movie type
     const movies: Movie[] = data.data.movies.map((movie: any) => ({
       id: movie._id,
       slug: generateSlug(movie.title),
@@ -77,8 +74,6 @@ async function getLatestMovies(
   }
 }
 
-
-// Helper function to generate slug from title
 function generateSlug(title: string): string {
   return title
     .toLowerCase()
@@ -105,16 +100,15 @@ async function getCategories(): Promise<Category[]> {
   return allCategories;
 }
 
-export default async function HomePage({
-  searchParams,
-}: {
-  // searchParams can either be a Promise (root `/`) or an object (dynamic routes)
-  searchParams: { page?: string } | Promise<{ page?: string }>;
-}) {
-  // unwrap the Promise if needed
-  const params = searchParams instanceof Promise ? await searchParams : searchParams;
-// In HomePage
-const currentPage = parseInt(params.page?.toString() || '1', 10);
+interface PageProps {
+  params: Promise<{ pageNumber: string }> | { pageNumber: string };
+}
+
+export default async function PageNumberPage({ params }: PageProps) {
+  const resolvedParams = params instanceof Promise ? await params : params;
+  const currentPage = parseInt(resolvedParams.pageNumber || '1', 10);
+
+  console.log('Current page from params:', currentPage); // Debug log
 
   const { movies, totalPages } = await getLatestMovies(currentPage);
   const categories = await getCategories();
@@ -127,10 +121,9 @@ const currentPage = parseInt(params.page?.toString() || '1', 10);
       <main className="flex-1 container mx-auto px-4 py-8">
         <CategoryList categories={categories} />
 
-        {/* Latest Releases */}
         <Suspense fallback={<MovieGridSkeleton />}>
           {movies.length > 0 ? (
-            <MovieGrid movies={movies} title="Latest Releases" />
+            <MovieGrid movies={movies} title={`Latest Releases - Page ${currentPage}`} />
           ) : (
             <div className="text-center py-12">
               <p className="text-gray-400">
@@ -140,7 +133,6 @@ const currentPage = parseInt(params.page?.toString() || '1', 10);
           )}
         </Suspense>
 
-        {/* Pagination */}
         {totalPages > 0 && (
           <Pagination currentPage={currentPage} totalPages={totalPages} basePath="/page" />
         )}
@@ -151,10 +143,14 @@ const currentPage = parseInt(params.page?.toString() || '1', 10);
   );
 }
 
-
 // Generate metadata for SEO
-export const metadata = {
-  title: 'MovieHub - Download HD Movies & TV Shows',
-  description: 'Download latest Bollywood, Hollywood, Hindi Dubbed movies and web series in HD quality',
-  keywords: 'movies, download, HD movies, Bollywood, Hollywood, web series',
-};
+export async function generateMetadata({ params }: PageProps) {
+  const resolvedParams = params instanceof Promise ? await params : params;
+  const pageNumber = resolvedParams.pageNumber || '1';
+  
+  return {
+    title: `MovieHub - Page ${pageNumber} | Download HD Movies & TV Shows`,
+    description: `Browse latest Bollywood, Hollywood, Hindi Dubbed movies and web series - Page ${pageNumber}`,
+    keywords: 'movies, download, HD movies, Bollywood, Hollywood, web series',
+  };
+}

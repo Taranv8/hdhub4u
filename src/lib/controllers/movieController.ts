@@ -2,6 +2,14 @@
 import { connectToDatabase } from '../mongodb';
 import { ObjectId } from 'mongodb'; // Add this import
 
+export interface EpisodeLink {
+  episode: string;
+  links: {
+    [quality: string]: {
+      [platform: string]: string;
+    };
+  };
+}
 export interface Movie {
   _id: string;
   title: string;
@@ -13,6 +21,7 @@ export interface Movie {
   stars: string;
   director: string;
   language: string;
+  heading: string,
   quality: string;
   screenshots: string[];
   downloadLinks: Array<{
@@ -22,6 +31,7 @@ export interface Movie {
   trailer: string;
   storyline: string;
   releaseDate: Date;
+  episodeLinks?: EpisodeLink[];
 }
 
 export interface PaginationInfo {
@@ -51,7 +61,8 @@ export async function getLatestMovies(
     
     // Calculate skip value for pagination
     const skip = (page - 1) * limit;
-    
+    console.log('Fetching movies:', { page, skip, limit });
+
     // Fetch movies sorted by release date (newest first)
     const moviesFromDb = await db
       .collection('movies')
@@ -67,6 +78,7 @@ export async function getLatestMovies(
       title: movie.title || '',
       link: movie.link || '',
       image: movie.image || '',
+      heading:movie.heading || '',
       shortTitle: movie.shortTitle || '',
       imdbRating: movie.imdbRating || 0,
       genre: movie.genre || '',
@@ -79,6 +91,7 @@ export async function getLatestMovies(
       trailer: movie.trailer || '',
       storyline: movie.storyline || '',
       releaseDate: movie.releaseDate || new Date(),
+      episodeLinks: movie.episodeLinks || [], 
     }));
     
     // Get total count for pagination info

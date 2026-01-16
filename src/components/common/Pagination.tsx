@@ -159,36 +159,37 @@ export default function Pagination({
         <ul className="pagination">
           {/* Page Numbers */}
           {pages.map((page, index) => (
-            <li key={index}>
-              {page === '...' ? (
-                <span className="page-numbers dots">…</span>
-              ) : currentPage === page ? (
-                <span aria-current="page" className="page-numbers current">
-                  {page}
-                </span>
-              ) : (
-                <a
-                  href={`${basePath}/page/${page}`}
-                  className="page-numbers"
-                >
-                  {page}
-                </a>
-              )}
-            </li>
-          ))}
+  <li key={index}>
+    {page === '...' ? (
+      <span className="page-numbers dots">…</span>
+    ) : currentPage === page ? (
+      <span aria-current="page" className="page-numbers current">
+        {page}
+      </span>
+    ) : (
+      <a
+        href={page === 1 ? '/' : `${basePath}/${page}`}
+        className="page-numbers"
+      >
+        {page}
+      </a>
+    )}
+  </li>
+))}
 
-          {/* Next Button */}
-          {currentPage < totalPages && (
-            <li>
-              <a
-                href={`${basePath}/page/${currentPage + 1}`}
-                className="next page-numbers"
-              >
-                <span className="material-left">Next</span>
-                <ChevronRight size={16} />
-              </a>
-            </li>
-          )}
+
+{currentPage < totalPages && (
+  <li>
+    <a
+      href={`${basePath}/${currentPage + 1}`}
+      className="next page-numbers"
+    >
+      <span className="material-left">Next</span>
+      <ChevronRight size={16} />
+    </a>
+  </li>
+)}
+
         </ul>
       </div>
     </>

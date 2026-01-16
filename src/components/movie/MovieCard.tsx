@@ -34,7 +34,7 @@ export default function MovieCard({ movie }: MovieCardProps) {
 
         {/* Movie Info */}
         <div className="p-3 bg-[#111111] min-h-[200px]">
-          <h3 className="text-m py-1 font-bold text-white group-hover:text-blue-400 transition">
+          <h3 className="text-m py-1 font-semibold text-white group-hover:text-blue-400 transition">
             {formatTitle(movie.title)}
           </h3>
         </div>

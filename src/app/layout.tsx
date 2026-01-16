@@ -3,9 +3,14 @@
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
+import { Open_Sans } from 'next/font/google';
 
 const inter = Inter({ subsets: ['latin'] });
-
+const openSans = Open_Sans({
+  subsets: ['latin'],
+  weight: ['400', '600','800'],
+  display: 'swap',
+});
 export const metadata: Metadata = {
   title: 'MovieHub - Download HD Movies & TV Shows',
   description: 'Download latest Bollywood, Hollywood, Hindi Dubbed movies and web series in HD quality',
@@ -22,7 +27,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={`${inter.className} antialiased`}>
+      <body className={openSans.className}>
         {children}
       </body>
     </html>

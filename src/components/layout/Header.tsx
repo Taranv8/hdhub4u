@@ -13,11 +13,11 @@ export default function Header() {
   const [categoryMenuOpen, setCategoryMenuOpen] = useState(false);
 
   return (
-    <header className="bg-gray-900 text-white sticky top-0 z-50 shadow-lg">
+    <header className="bg-black text-white  top-0 z-50 shadow-lg ">
       {/* Primary Navigation */}
       <nav className="border-b border-gray-800">
-        <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between h-16">
+        <div className="container mx-1 px-1">
+          <div className="flex items-center justify-between ">
             {/* Mobile Menu Button */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -28,15 +28,16 @@ export default function Header() {
             </button>
 
             {/* Logo */}
-            <Link href="/" className="flex items-center">
-              <Image
-                src="/images/hdhub4ulogo.png"
-                alt="MovieHub"
-                width={150}
-                height={40}
-                className="h-10 w-auto"
-              />
-            </Link>
+            <Link href="/" className="flex items-center h-full">
+  <Image
+    src="/images/hdhub4ulogo.png"
+    alt="MovieHub"
+    width={165}
+    height={34}
+    className="h-full w-auto object-contain"
+  />
+</Link>
+
 
             {/* Desktop Navigation */}
             <div className={`${mobileMenuOpen ? 'block' : 'hidden'} lg:block absolute lg:relative top-16 lg:top-0 left-0 right-0 bg-gray-900 lg:bg-transparent`}>

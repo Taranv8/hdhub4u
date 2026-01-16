@@ -5,71 +5,17 @@ import Image from 'next/image';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { formatTitle } from '@/lib/utils/formatters';
-import { Download, Calendar, Film, Languages, Star, User, Play } from 'lucide-react';
 import { getMovieById } from '@/lib/controllers/movieidController';
 import MovieIcon from '@mui/icons-material/Movie';
-import { ThemeProvider, css, keyframes } from '@emotion/react';
-import styled from '@emotion/styled';
 import DateRangeIcon from '@mui/icons-material/DateRange';
 import FolderIcon from '@mui/icons-material/Folder';
 import GridViewSharpIcon from '@mui/icons-material/GridViewSharp';
 import DownloadLink from '@/components/DownloadLink';
 import EpisodeLink from '@/components/EpisodeLink';
 import SearchBox from '@/components/sections/SearchBox';
-import BestMonthlyMovies from '@/components/sections/BestMonthlyMovies';
-import CategoryList from '@/components/sections/CategoryList';
-import type { Movie, Category } from '@/types/movie';
-import { MAIN_CATEGORIES, GENRES } from '@/lib/constants/categories';
 
-// Helper function to generate slug from title
-function generateSlug(title: string): string {
-  return title
-    .toLowerCase()
-    .replace(/[^\w\s-]/g, '')
-    .replace(/\s+/g, '-')
-    .replace(/-+/g, '-')
-    .trim();
-}
-async function getTopMonthlyMovies() {
-  try {
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
-    
-    const response = await fetch(`${baseUrl}/api/monthly-movies`, {
-      next: { revalidate: 300 }
-    });
 
-    const data = await response.json();
-    // console.log('Monthly movies data:', data); // ADD THIS LINE
 
-    if (!data.success || !data.data) {
-      throw new Error(data.error || 'Failed to fetch monthly movies');
-    }
-
-    return data.data.map((movie: any) => ({
-      ...movie,
-      slug: generateSlug(movie.title),
-    }));
-  } catch (error) {
-    console.error('Error fetching monthly movies:', error);
-    return [];
-  }
-}
-async function getCategories(): Promise<Category[]> {
-  const allCategories = [
-    ...MAIN_CATEGORIES.map(cat => ({ 
-      id: cat.slug, 
-      name: cat.name, 
-      slug: cat.slug 
-    })),
-    ...GENRES.map(genre => ({ 
-      id: genre.toLowerCase(), 
-      name: genre, 
-      slug: genre.toLowerCase() 
-    })),
-  ];
-  
-  return allCategories;
-}
 async function getMovieDetails(id: string) {
   try {
     console.log('=== Getting movie details for ID:', id);
@@ -111,24 +57,15 @@ export default async function MovieDetailPage({
     })
     : null;
 
-  const genres = movie.genre ? movie.genre.split('|').map(g => g.trim()) : [];
-  const starsList = movie.stars ? movie.stars.split(',').map(s => s.trim()) : [];
+    const genres = movie.genre || [];
+      const starsList = movie.stars ? movie.stars.split(',').map(s => s.trim()) : [];
   const qualityList = movie.quality ? movie.quality.split('|').map(q => q.trim()) : [];
-  const categories = await getCategories();
-  const monthlyMovies = await getTopMonthlyMovies();
   
  
   return (
     <div className="min-h-screen bg-black flex flex-col">
       <Header />
-   {/* Best Monthly Movies Section */}
-{monthlyMovies.length > 0 && (
-  <BestMonthlyMovies movies={monthlyMovies} />
-)}
-
-      <div className="flex-1 container mx-auto  py-8">
-        <CategoryList  />
-        </div>
+ 
       <main className="flex-1 container mx-auto px-2 py-8 max-w-7xl">
         {/* Two Column Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">

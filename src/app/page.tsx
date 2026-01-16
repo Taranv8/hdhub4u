@@ -4,13 +4,10 @@ import { Suspense } from 'react';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import NoticeBanner from '@/components/common/NoticeBanner';
-import CategoryList from '@/components/sections/CategoryList';
 import MovieGrid from '@/components/movie/MovieGrid';
 import Pagination from '@/components/common/Pagination';
 import { MovieGridSkeleton } from '@/components/common/Loading';
-import { MAIN_CATEGORIES, GENRES } from '@/lib/constants/categories';
-import type { Movie, Category } from '@/types/movie';
-import BestMonthlyMovies from '@/components/sections/BestMonthlyMovies';
+import type { Movie } from '@/types/movie';
 
 
 // Fetch movies from the API
@@ -51,8 +48,8 @@ async function getLatestMovies(
       thumbnail: movie.image,
       year: new Date(movie.releaseDate).getFullYear().toString(),
       quality: movie.quality,
-      categories: movie.genre ? movie.genre.split('|').map((g: string) => g.trim()) : [],
-      imdbRating: movie.imdbRating,
+      categories: movie.genre || [],
+            imdbRating: movie.imdbRating,
       director: movie.director,
       heading: movie.heading,
       shortTitle: movie.shortTitle,
@@ -78,30 +75,7 @@ async function getLatestMovies(
     };
   }
 }
-async function getTopMonthlyMovies() {
-  try {
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
-    
-    const response = await fetch(`${baseUrl}/api/monthly-movies`, {
-      next: { revalidate: 300 }
-    });
 
-    const data = await response.json();
-    // console.log('Monthly movies data:', data); // ADD THIS LINE
-
-    if (!data.success || !data.data) {
-      throw new Error(data.error || 'Failed to fetch monthly movies');
-    }
-
-    return data.data.map((movie: any) => ({
-      ...movie,
-      slug: generateSlug(movie.title),
-    }));
-  } catch (error) {
-    console.error('Error fetching monthly movies:', error);
-    return [];
-  }
-}
 
 // Helper function to generate slug from title
 function generateSlug(title: string): string {
@@ -113,22 +87,7 @@ function generateSlug(title: string): string {
     .trim();
 }
 
-async function getCategories(): Promise<Category[]> {
-  const allCategories = [
-    ...MAIN_CATEGORIES.map(cat => ({ 
-      id: cat.slug, 
-      name: cat.name, 
-      slug: cat.slug 
-    })),
-    ...GENRES.map(genre => ({ 
-      id: genre.toLowerCase(), 
-      name: genre, 
-      slug: genre.toLowerCase() 
-    })),
-  ];
-  
-  return allCategories;
-}
+
 
 export default async function HomePage({
   searchParams,
@@ -142,20 +101,15 @@ export default async function HomePage({
 const currentPage = parseInt(params.page?.toString() || '1', 10);
 
   const { movies, totalPages } = await getLatestMovies(currentPage);
-  const categories = await getCategories();
-  const monthlyMovies = await getTopMonthlyMovies();
   
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
       {/* <NoticeBanner /> */}
-      {/* Best Monthly Movies Section */}
-{monthlyMovies.length > 0 && (
-  <BestMonthlyMovies movies={monthlyMovies} />
-)}
+    
 
       <main className="flex-1 container mx-auto  py-8">
-        <CategoryList  />
+      
 
         {/* Latest Releases */}
         <Suspense fallback={<MovieGridSkeleton />}>

@@ -17,8 +17,8 @@ export interface Movie {
   image: string;
   shortTitle: string;
   imdbRating: number;
-  genre: string;
-  stars: string;
+  genre: string[];
+    stars: string;
   director: string;
   language: string;
   heading: string,
@@ -59,7 +59,7 @@ export interface MovieResponse {
 
 export async function getLatestMovies(
   page: number = 1,
-  limit: number = 50
+  limit: number = 30
 ): Promise<MovieResponse> {
   try {
     const { db } = await connectToDatabase();
@@ -86,8 +86,8 @@ export async function getLatestMovies(
       heading:movie.heading || '',
       shortTitle: movie.shortTitle || '',
       imdbRating: movie.imdbRating || 0,
-      genre: movie.genre || '',
-      stars: movie.stars || '',
+      genre: movie.genre || [],
+            stars: movie.stars || '',
       director: movie.director || '',
       language: movie.language || '',
       quality: movie.quality || '',

@@ -88,8 +88,8 @@ export async function searchMovies(
         { title: { $regex: query, $options: 'i' } },
         { shortTitle: { $regex: query, $options: 'i' } },
         { heading: { $regex: query, $options: 'i' } },
-        { genre: { $regex: query, $options: 'i' } },
-        { stars: { $regex: query, $options: 'i' } },
+        { genre: { $in: [new RegExp(query, 'i')] } },
+                { stars: { $regex: query, $options: 'i' } },
         { director: { $regex: query, $options: 'i' } },
         { language: { $regex: query, $options: 'i' } }
       ]
@@ -101,8 +101,8 @@ export async function searchMovies(
         { title: { $regex: word, $options: 'i' } },
         { shortTitle: { $regex: word, $options: 'i' } },
         { heading: { $regex: word, $options: 'i' } },
-        { genre: { $regex: word, $options: 'i' } },
-        { stars: { $regex: word, $options: 'i' } }
+        { genre: { $in: [new RegExp(word, 'i')] } },
+                { stars: { $regex: word, $options: 'i' } }
       ]
     }));
     
@@ -142,8 +142,8 @@ export async function searchMovies(
       score += calculateSimilarity(movie.heading || '', query) * 0.6;
       
       // Boost for genre, language matches
-      if (movie.genre?.toLowerCase().includes(normalizedQuery)) score += 20;
-      if (movie.language?.toLowerCase().includes(normalizedQuery)) score += 15;
+      if (movie.genre?.some((g: string) => g.toLowerCase().includes(normalizedQuery))) score += 20;
+            if (movie.language?.toLowerCase().includes(normalizedQuery)) score += 15;
       
       // Boost for star/director matches
       queryWords.forEach(word => {
@@ -179,8 +179,8 @@ export async function searchMovies(
       heading: movie.heading || '',
       shortTitle: movie.shortTitle || '',
       imdbRating: movie.imdbRating || 0,
-      genre: movie.genre || '',
-      stars: movie.stars || '',
+      genre: movie.genre || [],
+            stars: movie.stars || '',
       director: movie.director || '',
       language: movie.language || '',
       quality: movie.quality || '',
@@ -248,8 +248,8 @@ async function getRecommendations(
       const recommendationFilter = {
         _id: { $nin: searchResults.map(m => m._id) }, // Exclude current results
         $or: [
-          { genre: { $regex: topResult.genre, $options: 'i' } },
-          { language: topResult.language },
+          { genre: { $in: topResult.genre.map(g => new RegExp(g, 'i')) } },
+                    { language: topResult.language },
           { stars: { $regex: topResult.stars.split(',')[0]?.trim() || '', $options: 'i' } },
           { director: topResult.director }
         ]
@@ -270,8 +270,8 @@ async function getRecommendations(
         heading: movie.heading || '',
         shortTitle: movie.shortTitle || '',
         imdbRating: movie.imdbRating || 0,
-        genre: movie.genre || '',
-        stars: movie.stars || '',
+        genre: movie.genre || [],
+                stars: movie.stars || '',
         director: movie.director || '',
         language: movie.language || '',
         quality: movie.quality || '',
@@ -291,8 +291,8 @@ async function getRecommendations(
     
     const fallbackFilter: any = {};
     if (detectedGenre) {
-      fallbackFilter.genre = { $regex: detectedGenre, $options: 'i' };
-    }
+      fallbackFilter.genre = { $in: [new RegExp(detectedGenre, 'i')] };
+        }
     
     const fallbackRecommendations = await db
       .collection('movies')

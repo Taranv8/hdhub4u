@@ -17,8 +17,8 @@ export interface MovieDetails {
   image: string;
   shortTitle: string;
   imdbRating: number;
-  genre: string;
-  stars: string;
+  genre: string[];
+    stars: string;
   director: string;
   language: string;
   quality: string;
@@ -63,8 +63,8 @@ export async function getMovieById(id: string): Promise<MovieDetails | null> {
       image: movie.image || '',
       shortTitle: movie.shortTitle || '',
       imdbRating: movie.imdbRating || 0,
-      genre: movie.genre || '',
-      heading:movie.heading || '',
+      genre: movie.genre || [],
+            heading:movie.heading || '',
 
       stars: movie.stars || '',
       director: movie.director || '',

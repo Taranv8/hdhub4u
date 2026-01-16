@@ -10,8 +10,8 @@ export function adaptBackendMovieToFrontend(backendMovie: BackendMovie): Fronten
     poster: backendMovie.image,
     thumbnail: backendMovie.image,
     year: new Date(backendMovie.releaseDate).getFullYear().toString(),
-    categories: backendMovie.genre ? backendMovie.genre.split(',').map(g => g.trim()) : [],
-    rating: backendMovie.imdbRating,
+    categories: backendMovie.genre || [],
+        rating: backendMovie.imdbRating,
     language: backendMovie.language,
     quality: backendMovie.quality,
     // Add any other fields your frontend Movie type needs

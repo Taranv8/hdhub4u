@@ -2,69 +2,18 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Menu, X } from 'lucide-react';
-import { NAVIGATION_LINKS, MAIN_CATEGORIES, GENRES } from '@/lib/constants/categories';
-import type { Movie, Category } from '@/types/movie';
+import { NAVIGATION_LINKS } from '@/lib/constants/categories';
 import BestMonthlyMovies from '@/components/sections/BestMonthlyMovies';
 import CategoryList from '@/components/sections/CategoryList';
-
-// Helper function to generate slug from title
-function generateSlug(title: string): string {
-  return title
-    .toLowerCase()
-    .replace(/[^\w\s-]/g, '')
-    .replace(/\s+/g, '-')
-    .replace(/-+/g, '-')
-    .trim();
-}
+import { useMonthlyMovies } from '@/contexts/MonthlyMoviesContext';
 
 export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [categoryMenuOpen, setCategoryMenuOpen] = useState(false);
-  const [monthlyMovies, setMonthlyMovies] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-// Updated useEffect in your page component
-useEffect(() => {
-  async function fetchMonthlyMovies() {
-    try {
-      const apiUrl = '/api/monthly-movies';
-      
-      console.log('Fetching from:', apiUrl);
-      
-      const response = await fetch(apiUrl, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      console.log('Fetched data:', data);
-
-      if (!data.success || !data.data) {
-        throw new Error(data.error || 'Failed to fetch monthly movies');
-      }
-
-      // No need to generate slug anymore, just use the data as is
-      setMonthlyMovies(data.data);
-    } catch (error) {
-      console.error('Error fetching monthly movies:', error);
-      setMonthlyMovies([]);
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  fetchMonthlyMovies();
-}, []);
+  const { movies: monthlyMovies, loading } = useMonthlyMovies();
 
   return (
     <header className="bg-black text-white top-0 z-50 shadow-lg">

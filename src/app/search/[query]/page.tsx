@@ -1,7 +1,8 @@
 // app/search/[query]/page.tsx
+// ========================================
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import type { Movie } from '@/types/movie';
@@ -16,49 +17,42 @@ export default function SearchPage() {
   const page = parseInt(searchParams.get('page') || '1');
 
   const [movies, setMovies] = useState<Movie[]>([]);
-  const [recommendations, setRecommendations] = useState<Movie[]>([]);
   const [pagination, setPagination] = useState<PaginationInfo | null>(null);
-  const [searchType, setSearchType] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    async function fetchSearchResults() {
-      try {
-        setLoading(true);
-        setError(null);
-        
-        const response = await fetch(
-          `/api/search?query=${encodeURIComponent(query)}&page=${page}`
-        );
-        
-        if (!response.ok) {
-          throw new Error('Failed to fetch search results');
-        }
-        
-        const data = await response.json();
-        
-        if (!data.success) {
-          throw new Error(data.error || 'Search failed');
-        }
-        
-        // Use adapter to transform backend movies to frontend format
-        const transformedMovies = adaptBackendMoviesToFrontend(data.data.movies);
-        const transformedRecommendations = adaptBackendMoviesToFrontend(data.data.recommendations);
-        
-        setMovies(transformedMovies);
-        setRecommendations(transformedRecommendations);
-        setPagination(data.data.pagination);
-        setSearchType(data.data.searchType);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'An error occurred');
-      } finally {
-        setLoading(false);
+  const fetchSearchResults = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const response = await fetch(
+        `/api/search?query=${encodeURIComponent(query)}&page=${page}`
+      );
+      
+      const data = await response.json();
+      
+      if (!data.success) {
+        throw new Error(data.error || 'Search failed');
       }
+      
+      // Transform backend movies to frontend format
+      const transformedMovies = adaptBackendMoviesToFrontend(data.data.movies);
+      
+      setMovies(transformedMovies);
+      setPagination(data.data.pagination);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred');
+      setMovies([]);
+      setPagination(null);
+    } finally {
+      setLoading(false);
     }
-
-    fetchSearchResults();
   }, [query, page]);
+
+  useEffect(() => {
+    fetchSearchResults();
+  }, [fetchSearchResults]);
 
   if (loading) {
     return (
@@ -100,60 +94,25 @@ export default function SearchPage() {
           </h1>
           
           {pagination && (
-            <div className="flex items-center gap-4 text-gray-400">
-              <p>{pagination.totalMovies} items found</p>
-              {searchType && (
-                <span className="px-3 py-1 bg-gray-800 rounded-full text-xs">
-                  {searchType === 'exact' ? '🎯 Exact Match' : 
-                   searchType === 'fuzzy' ? '🔍 Fuzzy Match' : 
-                   '📝 Partial Match'}
-                </span>
-              )}
-            </div>
+            <p className="text-gray-400">
+              {pagination.totalMovies} {pagination.totalMovies === 1 ? 'item' : 'items'} found
+            </p>
           )}
         </div>
 
-        {/* Results Grid */}
+        {/* Results */}
         {movies.length === 0 ? (
           <div className="text-center py-20">
             <div className="text-6xl mb-4">🔍</div>
             <p className="text-2xl text-gray-400 mb-2">No results found for &quot;{query}&quot;</p>
             <p className="text-gray-500">Try different keywords or check the spelling</p>
-            
-            {recommendations.length > 0 && (
-              <div className="mt-12">
-                <h2 className="text-2xl font-bold mb-6">You might like these instead</h2>
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
-                  {recommendations.map((movie) => (
-                    <MovieCard key={movie.id} movie={movie} />
-                  ))}
-                </div>
-              </div>
-            )}
           </div>
         ) : (
-          <>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6 mb-12">
-              {movies.map((movie) => (
-                <MovieCard key={movie.id} movie={movie} />
-              ))}
-            </div>
-
-            {/* Recommendations Section */}
-            {recommendations.length > 0 && (
-              <div className="mt-16 border-t border-gray-800 pt-12">
-                <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-                  <span>💡</span>
-                  <span>Recommended for you</span>
-                </h2>
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
-                  {recommendations.map((movie) => (
-                    <MovieCard key={movie.id} movie={movie} />
-                  ))}
-                </div>
-              </div>
-            )}
-          </>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6 mb-12">
+            {movies.map((movie) => (
+              <MovieCard key={movie.id} movie={movie} />
+            ))}
+          </div>
         )}
 
         {/* Pagination */}

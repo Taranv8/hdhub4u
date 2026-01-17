@@ -27,48 +27,44 @@ export default function Header() {
   const [monthlyMovies, setMonthlyMovies] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    async function fetchMonthlyMovies() {
-      try {
-        // Use relative URL in client components
-        const apiUrl = '/api/monthly-movies';
-        
-        console.log('Fetching from:', apiUrl);
-        
-        const response = await fetch(apiUrl, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        });
+// Updated useEffect in your page component
+useEffect(() => {
+  async function fetchMonthlyMovies() {
+    try {
+      const apiUrl = '/api/monthly-movies';
+      
+      console.log('Fetching from:', apiUrl);
+      
+      const response = await fetch(apiUrl, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
 
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const data = await response.json();
-        console.log('Fetched data:', data);
-
-        if (!data.success || !data.data) {
-          throw new Error(data.error || 'Failed to fetch monthly movies');
-        }
-
-        const movies = data.data.map((movie: any) => ({
-          ...movie,
-          slug: generateSlug(movie.title),
-        }));
-
-        setMonthlyMovies(movies);
-      } catch (error) {
-        console.error('Error fetching monthly movies:', error);
-        setMonthlyMovies([]);
-      } finally {
-        setLoading(false);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
-    }
 
-    fetchMonthlyMovies();
-  }, []);
+      const data = await response.json();
+      console.log('Fetched data:', data);
+
+      if (!data.success || !data.data) {
+        throw new Error(data.error || 'Failed to fetch monthly movies');
+      }
+
+      // No need to generate slug anymore, just use the data as is
+      setMonthlyMovies(data.data);
+    } catch (error) {
+      console.error('Error fetching monthly movies:', error);
+      setMonthlyMovies([]);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  fetchMonthlyMovies();
+}, []);
 
   return (
     <header className="bg-black text-white top-0 z-50 shadow-lg">

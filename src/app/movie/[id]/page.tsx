@@ -249,7 +249,7 @@ export default async function MovieDetailPage({
               <div className="w-[96%] h-[2px] bg-[#252525] mx-auto mb-4"></div>
 
               {/* Screenshots Gallery */}
-              {movie.screenshots && movie.screenshots.length > 0 && (
+              {movie.screenshots && movie.screenshots.length > 1 && (
                 <div className="mt-12">
                   {/* Heading */}
                   <h2 className="text-2xl font-bold text-red-500 text-center mb-6 px-4">
@@ -258,14 +258,14 @@ export default async function MovieDetailPage({
 
                   {/* Screenshots grid */}
                   <div className="grid grid-cols-2 gap-0 px-4 max-w-3xl mx-auto">
-                    {movie.screenshots.map((screenshot, index) => (
+                    {movie.screenshots.slice(1).map((screenshot, index) => (
                       <div
                         key={index}
                         className="relative w-full h-55  overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 cursor-pointer group border border-gray-800 hover:border-blue-500"
                       >
                         <Image
                           src={screenshot}
-                          alt={`Screenshot ${index + 1}`}
+                          alt={`Screenshot ${index + 2}`}
                           fill
                           sizes="50vw"
                           className="object-cover group-hover:scale-105 transition-transform duration-300"

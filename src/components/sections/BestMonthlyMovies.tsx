@@ -9,7 +9,6 @@ interface MonthlyMovie {
   _id: string;
   title: string;
   image: string;
-  slug: string;
   monthlydownload: number;
 }
 
@@ -33,7 +32,7 @@ export default function BestMonthlyMovies({ movies }: BestMonthlyMoviesProps) {
 
     const slideToNext = () => {
       setCurrentIndex((prevIndex) => {
-        const nextIndex = prevIndex + 1;
+        const nextIndex = (prevIndex + 1) % sortedMovies.length;
         
         // Calculate scroll position
         const scrollPosition = nextIndex * itemWidth;
@@ -43,19 +42,6 @@ export default function BestMonthlyMovies({ movies }: BestMonthlyMoviesProps) {
           left: scrollPosition,
           behavior: 'smooth'
         });
-
-        // Reset to beginning when we reach the end of original movies
-        if (nextIndex >= sortedMovies.length) {
-          setTimeout(() => {
-            container.scrollTo({
-              left: 0,
-              behavior: 'auto' // Instant jump back
-            });
-            setCurrentIndex(0);
-          }, 500); // Wait for smooth scroll to complete
-          
-          return nextIndex;
-        }
 
         return nextIndex;
       });
@@ -70,9 +56,6 @@ export default function BestMonthlyMovies({ movies }: BestMonthlyMoviesProps) {
     return null;
   }
 
-  // Duplicate movies for infinite scroll effect
-  const displayMovies = [...sortedMovies, ...sortedMovies];
-
   return (
     <div className="bg-black from-gray-900 via-gray-800 to-gray-900 py-2 mb-0 relative overflow-hidden -mx-4 sm:-mx-6 lg:-mx-8">
       <div className="w-full">
@@ -85,10 +68,10 @@ export default function BestMonthlyMovies({ movies }: BestMonthlyMoviesProps) {
             scrollBehavior: 'smooth'
           }}
         >
-          {displayMovies.map((movie, index) => (
+          {sortedMovies.map((movie, index) => (
             <Link
-              key={`${movie._id}-${index}`}
-              href={`/movie/${movie.slug}`}
+              key={movie._id}
+              href={`/movie/${movie._id}`}
               className="flex-shrink-0 group relative transition-all duration-300 ease-in-out"
             >
               <div className="relative w-28 h-42 overflow-hidden shadow-lg transition-all duration-300 ease-in-out transform group-hover:scale-110 group-hover:shadow-2xl group-hover:z-10">

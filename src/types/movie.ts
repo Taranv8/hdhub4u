@@ -8,6 +8,7 @@ export interface Movie {
   title: string;
   poster: string;
   thumbnail: string;
+  featured?: boolean;
   year: string;
   quality: string;
   categories: string[];

@@ -24,14 +24,17 @@ async function getLatestMovies(
       throw new Error('Invalid page number');
     }
 
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
-    
     console.log('Fetching movies for page:', currentPage); // debug
+// For build time, use absolute URL; for runtime, use relative
+const apiUrl = process.env.NEXT_PUBLIC_API_URL 
+  ? `${process.env.NEXT_PUBLIC_API_URL}/api/homepage?page=${currentPage}`
+  : `/api/homepage?page=${currentPage}`;
 
-    const response = await fetch(`${baseUrl}/api/homepage?page=${currentPage}`, {
-      cache: 'no-store'
-        });
+console.log('Fetching movies for page:', currentPage);
 
+const response = await fetch(apiUrl, {
+  cache: 'no-store'
+});
     if (!response.ok) {
       throw new Error('Failed to fetch movies from API');
     }

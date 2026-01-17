@@ -11,8 +11,8 @@ export function adaptBackendMovieToFrontend(backendMovie: BackendMovie): Fronten
     thumbnail: backendMovie.image,
     year: new Date(backendMovie.releaseDate).getFullYear().toString(),
     categories: backendMovie.genre || [],
-        rating: backendMovie.imdbRating,
-    language: backendMovie.language,
+    imdbRating: backendMovie.imdbRating,
+        language: backendMovie.language,
     quality: backendMovie.quality,
     // Add any other fields your frontend Movie type needs
   };

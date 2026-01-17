@@ -9,8 +9,10 @@ export interface Movie {
   poster: string;
   thumbnail: string;
   featured?: boolean;
+  
   year: string;
   quality: string;
+  rating?: number;
   categories: string[];
   // Additional fields from API
   imdbRating?: number;

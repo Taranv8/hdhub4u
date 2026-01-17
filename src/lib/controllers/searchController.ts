@@ -29,8 +29,6 @@ const searchProjection = {
   releaseDate: 1,
 };
 
-
-
 // Normalize text
 const normalizeText = (text: string): string => 
   text.toLowerCase().replace(/[^a-z0-9\s]/g, '').replace(/\s+/g, ' ').trim();
@@ -74,30 +72,68 @@ export async function searchMovies(
     const validLimit = Math.min(50, Math.max(1, Math.floor(limit)));
     const skip = (validPage - 1) * validLimit;
     
-    // Escape special regex characters
-    const escapedQuery = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    // Normalize and prepare search terms
     const normalizedQuery = normalizeText(query);
     const year = extractYear(query);
+    
+    // Split into words for flexible matching
+    const queryWords = normalizedQuery.split(/\s+/).filter(w => w.length > 0);
 
     const { db } = await connectToDatabase();
     const collection = db.collection('movies');
 
-    // Build optimized search filter
-    const searchFilter: any = {
+    // Build flexible search filter
+    const searchConditions = [];
+    
+    // Strategy 1: Match full query (with spaces normalized)
+    const escapedQuery = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    searchConditions.push({
       $or: [
         { title: { $regex: escapedQuery, $options: 'i' } },
         { shortTitle: { $regex: escapedQuery, $options: 'i' } },
         { heading: { $regex: escapedQuery, $options: 'i' } },
+      ]
+    });
+    
+    // Strategy 2: Match normalized query (no spaces/special chars)
+    if (normalizedQuery !== query.toLowerCase()) {
+      const noSpaceQuery = normalizedQuery.replace(/\s+/g, '');
+      searchConditions.push({
+        $or: [
+          { title: { $regex: noSpaceQuery, $options: 'i' } },
+          { shortTitle: { $regex: noSpaceQuery, $options: 'i' } },
+          { heading: { $regex: noSpaceQuery, $options: 'i' } },
+        ]
+      });
+    }
+    
+    // Strategy 3: Match all words individually
+    if (queryWords.length > 1) {
+      const wordMatches = queryWords.map(word => ({
+        $or: [
+          { title: { $regex: word, $options: 'i' } },
+          { shortTitle: { $regex: word, $options: 'i' } },
+          { heading: { $regex: word, $options: 'i' } },
+        ]
+      }));
+      searchConditions.push({ $and: wordMatches });
+    }
+    
+    // Strategy 4: Match in other fields
+    searchConditions.push({
+      $or: [
         { genre: { $regex: escapedQuery, $options: 'i' } },
         { stars: { $regex: escapedQuery, $options: 'i' } },
         { director: { $regex: escapedQuery, $options: 'i' } },
       ]
-    };
+    });
+
+    const searchFilter: any = { $or: searchConditions };
 
     // Add year filter if detected
     if (year) {
       searchFilter.$and = [
-        { $or: searchFilter.$or },
+        { $or: searchConditions },
         {
           releaseDate: {
             $gte: new Date(year, 0, 1),

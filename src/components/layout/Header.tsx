@@ -31,7 +31,7 @@ export default function Header() {
             </button>
 
             {/* Logo */}
-            <Link href="/" className="flex items-center h-full pl-8">
+            <Link href="/" prefetch={true} className="flex items-center h-full pl-8">
               <Image
                 src="/images/hdhub4ulogo.png"
                 alt="MovieHub"

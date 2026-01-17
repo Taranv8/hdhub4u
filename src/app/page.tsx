@@ -7,81 +7,11 @@ import NoticeBanner from '@/components/common/NoticeBanner';
 import MovieGrid from '@/components/movie/MovieGrid';
 import Pagination from '@/components/common/Pagination';
 import { MovieGridSkeleton } from '@/components/common/Loading';
+import { getLatestMovies } from '@/lib/controllers/movieController';
 import type { Movie } from '@/types/movie';
 
-// Add these two lines
-export const dynamic = 'force-dynamic';
-export const revalidate = 0;
-
-// Fetch movies from the API
-async function getLatestMovies(
-  page: number | string = 1
-): Promise<{ movies: Movie[]; totalPages: number }> {
-  try {
-    // Ensure page is a number
-    const currentPage = Number(page);
-    if (isNaN(currentPage) || currentPage < 1) {
-      throw new Error('Invalid page number');
-    }
-
-    console.log('Fetching movies for page:', currentPage); // debug
-// For build time, use absolute URL; for runtime, use relative
-const apiUrl = process.env.NEXT_PUBLIC_API_URL 
-  ? `${process.env.NEXT_PUBLIC_API_URL}/api/homepage?page=${currentPage}`
-  : `/api/homepage?page=${currentPage}`;
-
-console.log('Fetching movies for page:', currentPage);
-
-const response = await fetch(apiUrl, {
-  cache: 'no-store'
-});
-    if (!response.ok) {
-      throw new Error('Failed to fetch movies from API');
-    }
-
-    const data = await response.json();
-
-    if (!data.success || !data.data) {
-      throw new Error(data.error || 'Failed to fetch movies');
-    }
-
-    // Transform API response to your Movie type
-    const movies: Movie[] = data.data.movies.map((movie: any) => ({
-      id: movie._id,
-      slug: generateSlug(movie.title),
-      title: movie.title,
-      poster: movie.image,
-      thumbnail: movie.image,
-      year: new Date(movie.releaseDate).getFullYear().toString(),
-      quality: movie.quality,
-      categories: movie.genre || [],
-            imdbRating: movie.imdbRating,
-      director: movie.director,
-      heading: movie.heading,
-      shortTitle: movie.shortTitle,
-      stars: movie.stars,
-      language: movie.language,
-      downloadLinks: movie.downloadLinks || [],
-      trailer: movie.trailer,
-      screenshots: movie.screenshots || [],
-      storyline: movie.storyline,
-      releaseDate: movie.releaseDate,
-      episodeLinks: movie.episodeLinks || [],
-    }));
-
-    return {
-      movies,
-      totalPages: data.data.pagination.totalPages,
-    };
-  } catch (error) {
-    console.error('Error fetching movies:', error);
-    return {
-      movies: [],
-      totalPages: 0,
-    };
-  }
-}
-
+// Remove force-dynamic and allow Next.js to optimize
+export const revalidate = 60; // Revalidate every 60 seconds (ISR)
 
 // Helper function to generate slug from title
 function generateSlug(title: string): string {
@@ -93,30 +23,52 @@ function generateSlug(title: string): string {
     .trim();
 }
 
-
-
 export default async function HomePage({
   searchParams,
 }: {
-  // searchParams can either be a Promise (root `/`) or an object (dynamic routes)
   searchParams: { page?: string } | Promise<{ page?: string }>;
 }) {
-  // unwrap the Promise if needed
+  // Unwrap the Promise if needed
   const params = searchParams instanceof Promise ? await searchParams : searchParams;
-// In HomePage
-const currentPage = parseInt(params.page?.toString() || '1', 10);
+  const currentPage = parseInt(params.page?.toString() || '1', 10);
 
-  const { movies, totalPages } = await getLatestMovies(currentPage);
+  // Fetch directly from controller (no API route overhead)
+  const result = await getLatestMovies(currentPage, 30);
+  
+  // Transform to your Movie type
+  const movies: Movie[] = result.success && result.data 
+    ? result.data.movies.map((movie: any) => ({
+        id: movie._id,
+        slug: generateSlug(movie.title),
+        title: movie.title,
+        poster: movie.image,
+        thumbnail: movie.image,
+        year: new Date(movie.releaseDate).getFullYear().toString(),
+        quality: movie.quality,
+        categories: movie.genre || [],
+        imdbRating: movie.imdbRating,
+        director: movie.director,
+        heading: movie.heading,
+        shortTitle: movie.shortTitle,
+        stars: movie.stars,
+        language: movie.language,
+        downloadLinks: movie.downloadLinks || [],
+        trailer: movie.trailer,
+        screenshots: movie.screenshots || [],
+        storyline: movie.storyline,
+        releaseDate: movie.releaseDate,
+        episodeLinks: movie.episodeLinks || [],
+      }))
+    : [];
+
+  const totalPages = result.success && result.data ? result.data.pagination.totalPages : 0;
   
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
       {/* <NoticeBanner /> */}
     
-
-      <main className="flex-1 container mx-auto  py-8">
-      
-
+      <main className="flex-1 container mx-auto py-8">
         {/* Latest Releases */}
         <Suspense fallback={<MovieGridSkeleton />}>
           {movies.length > 0 ? (
@@ -140,7 +92,6 @@ const currentPage = parseInt(params.page?.toString() || '1', 10);
     </div>
   );
 }
-
 
 // Generate metadata for SEO
 export const metadata = {

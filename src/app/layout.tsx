@@ -5,6 +5,7 @@ import { Inter } from 'next/font/google';
 import './globals.css';
 import { Open_Sans } from 'next/font/google';
 import Providers from '@/components/Providers';
+import { initializeDatabase } from '@/lib/db-init';
 
 const inter = Inter({ subsets: ['latin'] });
 const openSans = Open_Sans({
@@ -20,6 +21,8 @@ export const metadata: Metadata = {
   viewport: 'width=device-width, initial-scale=1',
   themeColor: '#1f2937',
 };
+// Initialize database indexes on startup
+initializeDatabase().catch(console.error);
 
 export default function RootLayout({
   children,

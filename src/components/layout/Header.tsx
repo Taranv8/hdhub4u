@@ -63,9 +63,7 @@ export default function Header() {
       <div className="bg-black text-white">
         <div>
           {/* Best Monthly Movies Section */}
-          {!loading && monthlyMovies.length > 0 && (
-            <BestMonthlyMovies movies={monthlyMovies} />
-          )}
+          <BestMonthlyMovies movies={monthlyMovies} loading={loading} />
         </div>
 
         <div>

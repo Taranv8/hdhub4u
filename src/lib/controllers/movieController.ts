@@ -1,6 +1,6 @@
 // lib/controllers/movieController.ts
 import { connectToDatabase } from '../mongodb';
-import { ObjectId } from 'mongodb'; // Add this import
+import { ObjectId } from 'mongodb';
 
 export interface EpisodeLink {
   episode: string;
@@ -10,6 +10,7 @@ export interface EpisodeLink {
     };
   };
 }
+
 export interface Movie {
   _id: string;
   title: string;
@@ -18,10 +19,10 @@ export interface Movie {
   shortTitle: string;
   imdbRating: number;
   genre: string[];
-    stars: string;
+  stars: string;
   director: string;
   language: string;
-  heading: string,
+  heading: string;
   quality: string;
   screenshots: string[];
   downloadLinks: Array<{
@@ -57,64 +58,90 @@ export interface MovieResponse {
   error?: string;
 }
 
+// Projection to fetch only required fields
+const movieProjection = {
+  _id: 1,
+  title: 1,
+  link: 1,
+  image: 1,
+  heading: 1,
+  shortTitle: 1,
+  imdbRating: 1,
+  genre: 1,
+  stars: 1,
+  director: 1,
+  language: 1,
+  quality: 1,
+  screenshots: 1,
+  downloadLinks: 1,
+  trailer: 1,
+  storyline: 1,
+  releaseDate: 1,
+  episodeLinks: 1,
+};
+
+// Optimized mapper function
+const mapMovieDocument = (movie: any): Movie => ({
+  _id: movie._id.toString(),
+  title: movie.title ?? '',
+  link: movie.link ?? '',
+  image: movie.image ?? '',
+  heading: movie.heading ?? '',
+  shortTitle: movie.shortTitle ?? '',
+  imdbRating: movie.imdbRating ?? 0,
+  genre: movie.genre ?? [],
+  stars: movie.stars ?? '',
+  director: movie.director ?? '',
+  language: movie.language ?? '',
+  quality: movie.quality ?? '',
+  screenshots: movie.screenshots ?? [],
+  downloadLinks: movie.downloadLinks ?? [],
+  trailer: movie.trailer ?? '',
+  storyline: movie.storyline ?? '',
+  releaseDate: movie.releaseDate ?? new Date(),
+  episodeLinks: movie.episodeLinks ?? [],
+});
+
 export async function getLatestMovies(
   page: number = 1,
   limit: number = 30
 ): Promise<MovieResponse> {
   try {
-    const { db } = await connectToDatabase();
-    
-    // Calculate skip value for pagination
-    const skip = (page - 1) * limit;
-    console.log('Fetching movies:', { page, skip, limit });
+    // Validate and sanitize inputs
+    const validPage = Math.max(1, Math.floor(page));
+    const validLimit = Math.min(100, Math.max(1, Math.floor(limit)));
+    const skip = (validPage - 1) * validLimit;
 
-    // Fetch movies sorted by release date (newest first)
-    const moviesFromDb = await db
-      .collection('movies')
-      .find({})
-      .sort({ releaseDate: -1 })
-      .skip(skip)
-      .limit(limit)
-      .toArray();
+    const { db } = await connectToDatabase();
+    const collection = db.collection('movies');
+
+    // Execute count and find in parallel for better performance
+    const [moviesFromDb, totalMovies] = await Promise.all([
+      collection
+        .find({}, { projection: movieProjection })
+        .sort({ releaseDate: -1 })
+        .skip(skip)
+        .limit(validLimit)
+        .toArray(),
+      collection.countDocuments({})
+    ]);
+
+    // Map documents efficiently
+    const movies = moviesFromDb.map(mapMovieDocument);
     
-    // Transform MongoDB documents to Movie format (convert ObjectId to string)
-    const movies: Movie[] = moviesFromDb.map((movie) => ({
-      _id: movie._id.toString(), // Convert ObjectId to string
-      title: movie.title || '',
-      link: movie.link || '',
-      image: movie.image || '',
-      heading:movie.heading || '',
-      shortTitle: movie.shortTitle || '',
-      imdbRating: movie.imdbRating || 0,
-      genre: movie.genre || [],
-            stars: movie.stars || '',
-      director: movie.director || '',
-      language: movie.language || '',
-      quality: movie.quality || '',
-      screenshots: movie.screenshots || [],
-      downloadLinks: movie.downloadLinks || [],
-      trailer: movie.trailer || '',
-      storyline: movie.storyline || '',
-      releaseDate: movie.releaseDate || new Date(),
-      episodeLinks: movie.episodeLinks || [], 
-      
-    }));
-    
-    // Get total count for pagination info
-    const totalMovies = await db.collection('movies').countDocuments({});
-    const totalPages = Math.ceil(totalMovies / limit);
+    const totalPages = Math.ceil(totalMovies / validLimit);
     
     return {
       success: true,
       data: {
         movies,
         pagination: {
-          currentPage: page,
+          currentPage: validPage,
           totalPages,
           totalMovies,
-          moviesPerPage: limit,
-          hasNextPage: page < totalPages,
-          hasPrevPage: page > 1
+          moviesPerPage: validLimit,
+          hasNextPage: validPage < totalPages,
+          hasPrevPage: validPage > 1
         }
       }
     };

@@ -9,6 +9,9 @@ import Pagination from '@/components/common/Pagination';
 import { MovieGridSkeleton } from '@/components/common/Loading';
 import type { Movie } from '@/types/movie';
 
+// Add these two lines
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 // Fetch movies from the API
 async function getLatestMovies(
@@ -26,8 +29,8 @@ async function getLatestMovies(
     console.log('Fetching movies for page:', currentPage); // debug
 
     const response = await fetch(`${baseUrl}/api/homepage?page=${currentPage}`, {
-      next: { revalidate: 0 } // temporarily disable caching for testing
-    });
+      cache: 'no-store'
+        });
 
     if (!response.ok) {
       throw new Error('Failed to fetch movies from API');

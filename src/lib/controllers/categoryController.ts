@@ -137,10 +137,10 @@ export async function getMoviesByCategory(
     console.log('🔤 Input category (original):', category);
     console.log('🔤 Normalized input:', normalizedInput);
     
-    // Show what each genre normalizes to
-    console.log('🔍 Normalized genres in DB:');
-    allGenres.forEach(g => {
-      console.log(`   "${g}" → "${normalizeForComparison(g)}"`);
+    // Show what each genre normalizes to (only first 10 to avoid clutter)
+    console.log('🔍 Sample normalized genres in DB:');
+    allGenres.slice(0, 10).forEach(g => {
+      if (g) console.log(`   "${g}" → "${normalizeForComparison(g)}"`);
     });
 
     // Find matching genre from database
@@ -148,6 +148,7 @@ export async function getMoviesByCategory(
     
     // Method 1: Exact normalized match (most reliable)
     for (const genre of allGenres) {
+      if (!genre) continue; // Skip null/undefined genres
       if (normalizeForComparison(genre) === normalizedInput) {
         matchedGenre = genre;
         console.log('✅ Method 1 - Exact normalized match:', matchedGenre);
@@ -160,6 +161,7 @@ export async function getMoviesByCategory(
       console.log('⚠️ Method 1 failed, trying Method 2: case-insensitive original match');
       const decodedCategory = decodeURIComponent(category);
       for (const genre of allGenres) {
+        if (!genre) continue; // Skip null/undefined genres
         if (genre.toLowerCase() === decodedCategory.toLowerCase()) {
           matchedGenre = genre;
           console.log('✅ Method 2 - Case-insensitive match:', matchedGenre);
@@ -173,6 +175,7 @@ export async function getMoviesByCategory(
       console.log('⚠️ Method 2 failed, trying Method 3: hyphen to space conversion');
       const withSpaces = decodeURIComponent(category).replace(/-/g, ' ');
       for (const genre of allGenres) {
+        if (!genre) continue; // Skip null/undefined genres
         if (genre.toLowerCase() === withSpaces.toLowerCase()) {
           matchedGenre = genre;
           console.log('✅ Method 3 - Hyphen to space match:', matchedGenre);
@@ -185,6 +188,7 @@ export async function getMoviesByCategory(
     if (!matchedGenre) {
       console.log('⚠️ Method 3 failed, trying Method 4: fuzzy matching');
       const potentialMatches = allGenres.filter(genre => {
+        if (!genre) return false; // Skip null/undefined genres
         const normalizedGenre = normalizeForComparison(genre);
         return normalizedGenre.includes(normalizedInput) || 
                normalizedInput.includes(normalizedGenre);
@@ -205,6 +209,7 @@ export async function getMoviesByCategory(
       
       for (const variant of variants) {
         for (const genre of allGenres) {
+          if (!genre) continue; // Skip null/undefined genres
           if (genre.toLowerCase() === variant.toLowerCase()) {
             matchedGenre = genre;
             console.log('✅ Method 5 - Variant match:', matchedGenre, 'from:', variant);

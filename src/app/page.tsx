@@ -95,7 +95,7 @@ export default async function HomePage({
 
 // Generate metadata for SEO
 export const metadata = {
-  title: 'MovieHub - Download HD Movies & TV Shows',
-  description: 'Download latest Bollywood, Hollywood, Hindi Dubbed movies and web series in HD quality',
-  keywords: 'movies, download, HD movies, Bollywood, Hollywood, web series',
+  title: 'HDHub4u - Download HD Movies & TV Shows',
+  description: 'Download latest Hollywood, Bollywood, Punjabi,  Hindi Dubbed movies and web series in HD quality',
+  keywords: 'movies, download, HD movies, Bollywood, Hollywood, Punjabi, web series, Hindi dubbed',
 };

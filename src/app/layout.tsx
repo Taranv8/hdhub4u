@@ -14,9 +14,9 @@ const openSans = Open_Sans({
   display: 'swap',
 });
 export const metadata: Metadata = {
-  title: 'MovieHub - Download HD Movies & TV Shows',
-  description: 'Download latest Bollywood, Hollywood, Hindi Dubbed movies and web series in HD quality',
-  keywords: 'movies, download, HD movies, Bollywood, Hollywood, web series, Hindi dubbed',
+  title: 'HDHub4u - Download HD Movies & TV Shows',
+  description: 'Download latest Hollywood, Bollywood, Punjabi,  Hindi Dubbed movies and web series in HD quality',
+  keywords: 'movies, download, HD movies, Bollywood, Hollywood, Punjabi, web series, Hindi dubbed',
   authors: [{ name: 'MovieHub' }],
   viewport: 'width=device-width, initial-scale=1',
   themeColor: '#1f2937',

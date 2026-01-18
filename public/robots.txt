@@ -1,0 +1,25 @@
+# robots.txt for hdhub4u.auction
+
+# Allow all search engines
+User-agent: *
+
+# Allow specific routes
+Allow: /$
+Allow: /movie/
+Allow: /category/
+Allow: /page/
+
+# Block everything else
+Disallow: /api/
+Disallow: /admin/
+Disallow: /_next/
+Disallow: /static/
+
+# Sitemap location
+Sitemap: https://hdhub4u.auction/sitemap.xml
+
+# Crawl delay (optional - helps with server load)
+Crawl-delay: 1
+
+# User-agent: Claude-Web
+# Disallow: /

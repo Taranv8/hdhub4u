@@ -1,0 +1,176 @@
+Next.js App Router Project Structure
+Generated on: 1/18/2026, 9:37:54 PM
+Project: hdhub4u
+
+└── hdhub4u
+    ├── .idx
+    │   ├── dev.nix
+    │   └── mcp.json
+    ├── .vscode
+    │   └── settings.json
+    ├── public
+    │   ├── icons
+    │   ├── images
+    │   │   ├── banners
+    │   │   ├── hdhub4ulogo.png
+    │   │   ├── logo.png
+    │   │   └── placeholder.jpg
+    │   ├── file.svg
+    │   ├── globe.svg
+    │   ├── next.svg
+    │   ├── vercel.svg
+    │   └── window.svg
+    ├── src
+    │   ├── app
+    │   │   ├── api
+    │   │   │   ├── category
+    │   │   │   │   └── [categoryName]
+    │   │   │   │       └── route.ts
+    │   │   │   ├── downloadincrement
+    │   │   │   │   └── route.ts
+    │   │   │   ├── homepage
+    │   │   │   │   ├── displaymovie
+    │   │   │   │   │   └── route.ts
+    │   │   │   │   └── route.ts
+    │   │   │   ├── monthly-movies
+    │   │   │   │   └── route.ts
+    │   │   │   ├── movies
+    │   │   │   │   └── route.ts
+    │   │   │   └── search
+    │   │   │       └── route.ts
+    │   │   ├── category
+    │   │   │   └── [categoryName]
+    │   │   │       ├── not-found.tsx
+    │   │   │       └── page.tsx
+    │   │   ├── disclaimer
+    │   │   │   └── page.tsx
+    │   │   ├── how-to-download
+    │   │   │   └── page.tsx
+    │   │   ├── language
+    │   │   │   └── [language]
+    │   │   │       └── page.tsx
+    │   │   ├── movie
+    │   │   │   └── [id]
+    │   │   │       └── page.tsx
+    │   │   ├── page
+    │   │   │   └── [pageNumber]
+    │   │   │       └── page.tsx
+    │   │   ├── quality
+    │   │   │   └── [quality]
+    │   │   │       └── page.tsx
+    │   │   ├── search
+    │   │   │   └── [query]
+    │   │   │       └── page.tsx
+    │   │   ├── year
+    │   │   │   └── [year]
+    │   │   │       └── page.tsx
+    │   │   ├── favicon.ico
+    │   │   ├── globals.css
+    │   │   ├── layout.tsx
+    │   │   └── page.tsx
+    │   ├── components
+    │   │   ├── common
+    │   │   │   ├── Badge.tsx
+    │   │   │   ├── Breadcrumb.tsx
+    │   │   │   ├── Button.tsx
+    │   │   │   ├── CategoryFilter.tsx
+    │   │   │   ├── Loading.tsx
+    │   │   │   ├── NoticeBanner.tsx
+    │   │   │   ├── Pagination.tsx
+    │   │   │   └── ShareButtons.tsx
+    │   │   ├── layout
+    │   │   │   ├── Footer.tsx
+    │   │   │   ├── Header.tsx
+    │   │   │   ├── Navbar.tsx
+    │   │   │   └── Sidebar.tsx
+    │   │   ├── movie
+    │   │   │   ├── DownloadLinks.tsx
+    │   │   │   ├── MovieCard.tsx
+    │   │   │   ├── MovieDetails.tsx
+    │   │   │   ├── MovieGallery.tsx
+    │   │   │   ├── MovieGrid.tsx
+    │   │   │   ├── MovieInfo.tsx
+    │   │   │   └── RelatedMovies.tsx
+    │   │   ├── search
+    │   │   │   ├── SearchBar.tsx
+    │   │   │   └── SearchResults.tsx
+    │   │   ├── sections
+    │   │   │   ├── BestMonthlyMovies.tsx
+    │   │   │   ├── CategoryList.tsx
+    │   │   │   ├── CategorySection.tsx
+    │   │   │   ├── FeaturedMovies.tsx
+    │   │   │   ├── RightSidebar.tsx
+    │   │   │   ├── SearchBox.tsx
+    │   │   │   └── TopMoviesSlider.tsx
+    │   │   ├── ui
+    │   │   │   ├── Modal.tsx
+    │   │   │   └── Tooltip.tsx
+    │   │   ├── DownloadLink.tsx
+    │   │   ├── EpisodeLink.tsx
+    │   │   └── Providers.tsx
+    │   ├── contexts
+    │   │   └── MonthlyMoviesContext.tsx
+    │   ├── data
+    │   │   ├── categories.json
+    │   │   ├── featured.json
+    │   │   └── movies.json
+    │   ├── hooks
+    │   │   ├── useDebounce.ts
+    │   │   ├── useFavorites.ts
+    │   │   ├── useInfiniteScroll.ts
+    │   │   ├── useMovies.ts
+    │   │   └── useSearch.ts
+    │   ├── lib
+    │   │   ├── api
+    │   │   │   ├── debug
+    │   │   │   │   └── categories
+    │   │   │   │       └── route.ts
+    │   │   │   ├── categories.ts
+    │   │   │   ├── movies.ts
+    │   │   │   └── search.ts
+    │   │   ├── constants
+    │   │   │   ├── categories.ts
+    │   │   │   ├── languages.ts
+    │   │   │   ├── navigation.ts
+    │   │   │   └── qualities.ts
+    │   │   ├── controllers
+    │   │   │   ├── categoryController.ts
+    │   │   │   ├── downloadIncrementController.tsx
+    │   │   │   ├── movieController.ts
+    │   │   │   ├── movieidController.ts
+    │   │   │   ├── movieISRController.ts
+    │   │   │   ├── searchController.ts
+    │   │   │   └── topmovieController.ts
+    │   │   ├── utils
+    │   │   │   ├── formatters.ts
+    │   │   │   ├── movieAdapter.ts
+    │   │   │   ├── seo.ts
+    │   │   │   ├── slugify.ts
+    │   │   │   └── validators.ts
+    │   │   ├── db-init.ts
+    │   │   └── mongodb.ts
+    │   ├── store
+    │   │   ├── slices
+    │   │   │   ├── moviesSlice.ts
+    │   │   │   └── searchSlice.ts
+    │   │   └── store.ts
+    │   ├── styles
+    │   │   ├── components
+    │   │   └── utilities.css
+    │   └── types
+    │       ├── api.ts
+    │       ├── category.ts
+    │       ├── movie.ts
+    │       └── search.ts
+    ├── eslint.config.mjs
+    ├── firebase-debug.log
+    ├── GEMINI.md
+    ├── map-structure.js.js
+    ├── next-env.d.ts
+    ├── next.config.ts
+    ├── package.json
+    ├── postcss.config.mjs
+    ├── README.md
+    ├── setup-structure.js
+    ├── test-api.js
+    └── tsconfig.json

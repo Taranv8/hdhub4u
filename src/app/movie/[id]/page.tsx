@@ -5,7 +5,6 @@ import Image from 'next/image';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { formatTitle } from '@/lib/utils/formatters';
-import { getMovieById } from '@/lib/controllers/movieidController';
 import MovieIcon from '@mui/icons-material/Movie';
 import DateRangeIcon from '@mui/icons-material/DateRange';
 import FolderIcon from '@mui/icons-material/Folder';
@@ -13,57 +12,168 @@ import DownloadLink from '@/components/DownloadLink';
 import EpisodeLink from '@/components/EpisodeLink';
 import RightSidebar from '@/components/sections/RightSidebar';
 import Link from 'next/link';
+import { 
+  getAllMovieIds, 
+  getMovieForISR, 
+  extractCleanTitle 
+} from '@/lib/controllers/movieISRController';
+import type { Metadata } from 'next';
 
+// ============================================
+// ISR CONFIGURATION
+// ============================================
 
-async function getMovieDetails(id: string) {
+// Enable ISR with revalidation every 3600 seconds (1 hour)
+export const revalidate = 86400;
+
+// Enable static generation for paths not pre-rendered at build time
+export const dynamicParams = true;
+
+// Opt out of dynamic rendering - CRITICAL for ISR
+export const dynamic = 'force-static';
+
+// Generate static params at build time for top movies
+export async function generateStaticParams() {
   try {
-    console.log('=== Getting movie details for ID:', id);
-    const movie = await getMovieById(id);
-
-    if (!movie) {
-      console.log('Movie not found for ID:', id);
-      return null;
-    }
-
-    console.log('Movie found:', movie.title);
-    return movie;
+    const buildTime = new Date().toISOString();
+    console.log(`🚀 [${buildTime}] ISR BUILD: Starting static params generation...`);
+    
+    // Pre-render top 2000 most recent movies at build time
+    const movieIds = await getAllMovieIds(2000);
+    
+    console.log(`✅ [${buildTime}] ISR BUILD: Generated ${movieIds.length} static params`);
+    console.log(`📝 [${buildTime}] ISR BUILD: Remaining movies will use on-demand ISR`);
+    
+    return movieIds.map((id) => ({
+      id: id,
+    }));
   } catch (error) {
-    console.error('Error fetching movie:', error);
-    return null;
+    console.error('❌ ISR BUILD ERROR:', error);
+    return [];
   }
 }
+
+// ============================================
+// METADATA GENERATION FOR SEO
+// ============================================
+
+export async function generateMetadata({
+  params
+}: {
+  params: Promise<{ id: string }>
+}): Promise<Metadata> {
+  try {
+    const requestTime = new Date().toISOString();
+    const resolvedParams = await params;
+    
+    console.log(`🔍 [${requestTime}] METADATA: Fetching for movie ID: ${resolvedParams.id}`);
+    
+    const result = await getMovieForISR(resolvedParams.id);
+
+    if (!result.success || !result.data) {
+      console.log(`⚠️ [${requestTime}] METADATA: Movie not found - ${resolvedParams.id}`);
+      return {
+        title: 'Movie Not Found - HDHub4u',
+        description: 'The requested movie could not be found.',
+      };
+    }
+
+    const movie = result.data;
+    const cleanTitle = extractCleanTitle(movie.title, movie.shortTitle);
+    const year = new Date(movie.releaseDate).getFullYear();
+    
+    console.log(`✅ [${requestTime}] METADATA: Generated for "${cleanTitle}"`);
+    
+    // Generate SEO-optimized keywords
+    const keywords = [
+      cleanTitle,
+      `${cleanTitle} download`,
+      `${cleanTitle} ${year}`,
+      `${cleanTitle} HD`,
+      ...movie.genre.map(g => `${cleanTitle} ${g}`),
+      ...movie.genre,
+      movie.language,
+      'HD movie download',
+      'free movie download',
+    ].filter(Boolean).join(', ');
+
+    // Create rich description
+    const description = movie.storyline 
+      ? `${movie.storyline.substring(0, 155)}...`
+      : `Download ${cleanTitle} (${year}) in HD quality. ${movie.genre.join(', ')} movie available in ${movie.quality}. ${movie.language} language.`;
+
+    return {
+      title: `${cleanTitle} (${year}) Download HD - ${movie.quality} - HDHub4u`,
+      description,
+      keywords,
+      openGraph: {
+        title: `${cleanTitle} (${year}) - Download HD`,
+        description,
+        images: movie.image ? [{ url: movie.image }] : [],
+        type: 'video.movie',
+      },
+      twitter: {
+        card: 'summary_large_image',
+        title: `${cleanTitle} (${year}) - Download HD`,
+        description,
+        images: movie.image ? [movie.image] : [],
+      },
+      alternates: {
+        canonical: `/movie/${resolvedParams.id}`,
+      },
+    };
+  } catch (error) {
+    console.error('❌ METADATA ERROR:', error);
+    return {
+      title: 'Movie - HDHub4u',
+    };
+  }
+}
+
+// ============================================
+// PAGE COMPONENT
+// ============================================
 
 export default async function MovieDetailPage({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
+  const renderTime = new Date().toISOString();
   const resolvedParams = await params;
-  console.log('=== Page params received:', resolvedParams);
+  
+  console.log(`🎬 [${renderTime}] PAGE RENDER: Starting for movie ID: ${resolvedParams.id}`);
+  console.log(`📊 [${renderTime}] ISR STATUS: This page has revalidate=${revalidate}s, dynamic=${dynamic}`);
+  
+  // Fetch movie using ISR controller
+  const result = await getMovieForISR(resolvedParams.id);
 
-  const movie = await getMovieDetails(resolvedParams.id);
-
-  if (!movie) {
+  if (!result.success || !result.data) {
+    console.log(`❌ [${renderTime}] PAGE RENDER: Movie not found - ${resolvedParams.id}`);
     notFound();
   }
 
+  const movie = result.data;
+  const cleanTitle = extractCleanTitle(movie.title, movie.shortTitle);
+  
+  console.log(`✅ [${renderTime}] PAGE RENDER: Successfully rendered "${cleanTitle}"`);
+
   const formattedReleaseDate = movie.releaseDate
     ? new Date(movie.releaseDate).toLocaleDateString('en-GB', {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric',
-    })
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+      })
     : null;
 
   const genres = movie.genre || [];
   const starsList = movie.stars ? movie.stars.split(',').map(s => s.trim()) : [];
   const qualityList = movie.quality ? movie.quality.split('|').map(q => q.trim()) : [];
-  
- 
+
   return (
     <div className="min-h-screen bg-black flex flex-col">
       <Header />
- 
+
       <main className="flex-1 container mx-auto px-2 py-8 max-w-7xl">
         {/* Two Column Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
@@ -73,25 +183,24 @@ export default async function MovieDetailPage({
             <div className="mb-6">
               <h1
                 className="
-    bg-[#171717]
-    text-white
-    font-[600]
-    text-[20px]
-    md:text-[18px]
-    px-[12px]
-    py-[10px]
-    mb-[15px]
-    rounded-[3px]
-    shadow-[0_1px_1px_rgba(204,197,185,0.5)]
-    whitespace-normal
-    break-words
-    leading-[1.7]
-  "
+                  bg-[#171717]
+                  text-white
+                  font-[600]
+                  text-[20px]
+                  md:text-[18px]
+                  px-[12px]
+                  py-[10px]
+                  mb-[15px]
+                  rounded-[3px]
+                  shadow-[0_1px_1px_rgba(204,197,185,0.5)]
+                  whitespace-normal
+                  break-words
+                  leading-[1.7]
+                "
               >
                 <span className="inline-flex align-text-top mr-2">
                   <MovieIcon className="text-[18px]" />
                 </span>
-
                 <span className="[word-spacing:3px]">
                   {formatTitle(movie.title)}
                 </span>
@@ -125,18 +234,19 @@ export default async function MovieDetailPage({
                 ))}
               </div>
             </div>
-            {/* br line */}
+
+            {/* Divider */}
             <div className="w-[96%] h-[2px] bg-[#252525] mx-auto mb-4"></div>
 
-           {/* Storyline */}
-           {movie.storyline && (
-                <div>
-                  <h2 className="text-xl font-bold text-white mb-3">Storyline</h2>
-                  <p className="text-gray-400 leading-relaxed">
-                    {movie.storyline}
-                  </p>
-                </div>
-              )}
+            {/* Storyline */}
+            {movie.storyline && (
+              <div>
+                <h2 className="text-xl font-bold text-white mb-3">Storyline</h2>
+                <p className="text-gray-400 leading-relaxed">
+                  {movie.storyline}
+                </p>
+              </div>
+            )}
 
             {/* Poster Image */}
             <div className="mb-8 mt-6 flex justify-center">
@@ -152,14 +262,11 @@ export default async function MovieDetailPage({
               </div>
             </div>
 
-            {/* br line */}
             <div className="w-[96%] h-[2px] bg-[#252525] mx-auto mb-4"></div>
 
             {/* Details Section */}
             <div className="space-y-6">
-              {/* Details Section */}
               <div className="space-y-3 text-center">
-                {/* Heading */}
                 <h2
                   className="text-white"
                   style={{ fontSize: '24px', fontWeight: 600 }}
@@ -167,14 +274,12 @@ export default async function MovieDetailPage({
                   {movie.heading || 'Details'}
                 </h2>
 
-                {/* IMDB Rating */}
                 <div className="flex items-center justify-center gap-2 text-[#A3A3A3]">
                   <span className="text-lg font-semibold">
                     iMDb Rating: {movie.imdbRating || (Math.floor(Math.random() * 5) + 5)}/10
                   </span>
                 </div>
 
-                {/* Genre */}
                 {genres.length > 0 && (
                   <div className="text-[#A3A3A3]">
                     <span className="font-semibold text-[#A3A3A3]">Genre:</span>{' '}
@@ -182,7 +287,6 @@ export default async function MovieDetailPage({
                   </div>
                 )}
 
-                {/* Stars */}
                 {starsList.length > 0 && (
                   <div className="text-[#A3A3A3]">
                     <span className="font-semibold text-[#A3A3A3]">Stars:</span>{' '}
@@ -190,44 +294,39 @@ export default async function MovieDetailPage({
                   </div>
                 )}
 
-                {/* Creator / Director */}
                 {movie.director && (
                   <div className="text-[#A3A3A3]">
                     <span className="font-semibold text-[#A3A3A3]">Creator:</span> {movie.director}
                   </div>
                 )}
 
-                {/* Language */}
                 {movie.language && (
                   <div className="text-[#A3A3A3]">
                     <span className="font-semibold text-[#A3A3A3]">Language:</span> {movie.language}
                   </div>
                 )}
 
-                {/* Quality */}
                 {qualityList.length > 0 && (
                   <div className="text-[#A3A3A3]">
                     <span className="font-semibold text-[#A3A3A3]">Quality:</span> {qualityList.join(' | ')}
                   </div>
                 )}
               </div>
-              {/* br line */}
+
               <div className="w-[96%] h-[2px] bg-[#252525] mx-auto mb-4"></div>
 
               {/* Screenshots Gallery */}
               {movie.screenshots && movie.screenshots.length > 1 && (
                 <div className="mt-12">
-                  {/* Heading */}
                   <h2 className="text-2xl font-bold text-red-500 text-center mb-6 px-4">
                     : Screen-Shots :
                   </h2>
 
-                  {/* Screenshots grid */}
                   <div className="grid grid-cols-2 gap-0 px-4 max-w-3xl mx-auto">
                     {movie.screenshots.slice(1).map((screenshot, index) => (
                       <div
                         key={index}
-                        className="relative w-full h-55  overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 cursor-pointer group border border-gray-800 hover:border-blue-500"
+                        className="relative w-full h-55 overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 cursor-pointer group border border-gray-800 hover:border-blue-500"
                       >
                         <Image
                           src={screenshot}
@@ -241,7 +340,7 @@ export default async function MovieDetailPage({
                   </div>
                 </div>
               )}
-              {/* br line */}
+
               <div className="w-[96%] h-[2px] bg-[#252525] mx-auto mb-4"></div>
 
               {/* Download Links */}
@@ -260,7 +359,6 @@ export default async function MovieDetailPage({
                     : DOWNLOAD LINKS :
                   </h2>
 
-                  {/* Divider below heading */}
                   <div className="w-[96%] h-[2px] bg-[#252525] mx-auto mb-4"></div>
 
                   <div>
@@ -346,7 +444,7 @@ export default async function MovieDetailPage({
             </div>
           </div>
 
-          {/* Right Sidebar (1 column) - Replace with RightSidebar component */}
+          {/* Right Sidebar */}
           <RightSidebar />
         </div>
       </main>
@@ -354,24 +452,4 @@ export default async function MovieDetailPage({
       <Footer />
     </div>
   );
-}
-
-export async function generateMetadata({
-  params
-}: {
-  params: Promise<{ id: string }>
-}) {
-  const resolvedParams = await params;
-  const movie = await getMovieDetails(resolvedParams.id);
-
-  if (!movie) {
-    return {
-      title: 'Movie Not Found',
-    };
-  }
-
-  return {
-    title: `${formatTitle(movie.title)} - Download HD - MovieHub`,
-    description: movie.storyline || movie.shortTitle || formatTitle(movie.title),
-  };
 }

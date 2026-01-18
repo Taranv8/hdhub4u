@@ -31,18 +31,31 @@ async function getMoviesByCategory(
     ? `${process.env.NEXT_PUBLIC_API_URL}/api/category/${categoryName}?page=${currentPage}`
     : `http://localhost:3000/api/category/${categoryName}?page=${currentPage}`;
     
+    console.log('API URL:', apiUrl);
+    
     const response = await fetch(apiUrl, {
       cache: 'no-store'
     });
 
+    console.log('API Response Status:', response.status);
+
     if (!response.ok) {
+      const errorText = await response.text();
+      console.error('API Error Response:', errorText);
+      
       if (response.status === 404) {
         return { movies: [], totalPages: 0, categoryDisplay: '' };
       }
-      throw new Error('Failed to fetch movies from API');
+      
+      throw new Error(`API returned ${response.status}: ${errorText}`);
     }
 
     const data = await response.json();
+    console.log('API Response Data:', {
+      success: data.success,
+      movieCount: data.data?.movies?.length,
+      totalPages: data.data?.pagination?.totalPages
+    });
 
     if (!data.success || !data.data) {
       throw new Error(data.error || 'Failed to fetch movies');

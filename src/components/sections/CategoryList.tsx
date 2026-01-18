@@ -87,10 +87,15 @@ export default function CategoryList() {
       <div className="flex items-center w-full px-4 py-3">
 
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-2 bg-[#FFC107] text-black px-4 py-2 rounded font-semibold shrink-0">
-          <TheatersIcon className="w-5 h-5" />
-          <span className="text-lg">4KHDHub</span>
-        </Link>
+        <Link 
+  href="https://4khdhub.dad/" 
+  className="flex items-center gap-2 bg-[#FFC107] text-black px-4 py-2 rounded font-semibold shrink-0"
+  target="_blank"
+  rel="noopener noreferrer"
+>
+  <TheatersIcon className="w-5 h-5" />
+  <span className="text-lg">4KHDHub</span>
+</Link>
 
         {/* Desktop Navigation */}
         <div className="hidden lg:flex items-center gap-6 flex-1 ml-8">
@@ -133,7 +138,7 @@ export default function CategoryList() {
         </div>
 
         {/* Search Box (Right aligned) */}
-        <div className="ml-auto hidden sm:flex items-center">
+        <div className="ml-auto flex items-center">
           <SearchBox />
         </div>
 

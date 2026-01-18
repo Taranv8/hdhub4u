@@ -12,8 +12,8 @@ interface MovieCardProps {
 
 export default function MovieCard({ movie }: MovieCardProps) {
   return (
-    <div className="group mb-10 relative rounded-lg overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105 max-w-[200px]">
-<Link href={`/movie/${movie.id}`}>
+    <div className="group mb-10 relative rounded-lg overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 max-w-[200px]">
+      <Link href={`/movie/${movie.id}`}>
         {/* Movie Poster */}
         <div className="relative aspect-[2/3] overflow-hidden bg-gray-700">
           <Image
@@ -21,7 +21,7 @@ export default function MovieCard({ movie }: MovieCardProps) {
             alt={formatTitle(movie.title)}
             fill
             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 16vw"
-            className="object-cover transition-transform duration-300 group-hover:scale-110"
+            className="object-cover transition-transform duration-300 group-hover:scale-120"
             onError={(e) => {
               // Fallback image on error
               e.currentTarget.src = 'https://new1.hdhub4u.fo/wp-content/uploads/2021/05/hdhub4ulogo.png';
@@ -34,7 +34,7 @@ export default function MovieCard({ movie }: MovieCardProps) {
 
         {/* Movie Info */}
         <div className="p-3 bg-[#111111] min-h-[200px]">
-          <h3 className="text-m py-1 font-semibold text-white group-hover:text-blue-400 transition">
+          <h3 className="text-m py-1 font-semibold text-white group-hover:text-gray-400 transition">
             {formatTitle(movie.title)}
           </h3>
         </div>

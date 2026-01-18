@@ -13,7 +13,7 @@ import GridViewSharpIcon from '@mui/icons-material/GridViewSharp';
 import DownloadLink from '@/components/DownloadLink';
 import EpisodeLink from '@/components/EpisodeLink';
 import SearchBox from '@/components/sections/SearchBox';
-
+import Link from 'next/link';
 
 
 async function getMovieDetails(id: string) {
@@ -116,10 +116,11 @@ export default async function MovieDetailPage({
                   </span>
                 )}
 
-                {genres.map((genre) => (
-                  <span
-                    key={genre}
-                    className="
+{genres.map((genre) => (
+  <Link
+    key={genre}
+    href={`/category/${genre.toLowerCase().trim().replace(/\s+/g, '-').replace(/[^\w-]/g, '')}`}
+    className="
       inline-flex items-center gap-1.5
       px-3 py-1 rounded text-m font-medium
       bg-white text-[#444444]
@@ -127,11 +128,11 @@ export default async function MovieDetailPage({
       transition-colors duration-200
       cursor-pointer
     "
-                  >
-                    <FolderIcon sx={{ fontSize: 16, color: 'currentColor' }} />
-                    {genre}
-                  </span>
-                ))}
+  >
+    <FolderIcon sx={{ fontSize: 16, color: 'currentColor' }} />
+    {genre}
+  </Link>
+))}
 
                 {/* {movie.quality && (
                   <span className="px-3 py-1.5 bg-gray-800 rounded text-sm text-white font-medium flex items-center gap-1.5">
@@ -223,12 +224,7 @@ export default async function MovieDetailPage({
                   </div>
                 )}
 
-                {/* Number of Episodes
-  {movie.episodes && (
-    <div className="text-gray-300">
-      <span className="font-semibold text-[#A3A3A3]">No. of Episodes:</span> {movie.episodes}
-    </div>
-  )} */}
+             
 
                 {/* Language */}
                 {movie.language && (

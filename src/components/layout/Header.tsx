@@ -21,17 +21,17 @@ export default function Header() {
       <nav>
         <div className="container mx-1 px-1">
           <div className="flex items-center justify-between">
-            {/* Mobile Menu Button */}
+            {/* Mobile Menu Button - Hidden on mobile */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="lg:hidden p-2 hover:bg-gray-800 rounded"
+              className="hidden p-2 hover:bg-gray-800 rounded"
               aria-label="Toggle menu"
             >
               {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
             </button>
 
             {/* Logo */}
-            <Link href="/" prefetch={true} className="flex items-center h-full pl-8">
+            <Link href="/" prefetch={true} className="flex items-center h-full pl-4 lg:pl-8">
               <Image
                 src="/images/hdhub4ulogo.png"
                 alt="MovieHub"
@@ -41,14 +41,14 @@ export default function Header() {
               />
             </Link>
 
-            {/* Desktop Navigation */}
-            <div className={`${mobileMenuOpen ? 'block' : 'hidden'} lg:block absolute lg:relative top-16 lg:top-0 left-0 right-0 bg-gray-900 lg:bg-transparent`}>
-              <ul className="flex flex-col lg:flex-row lg:items-center lg:space-x-6 p-4 lg:p-0">
+            {/* Desktop Navigation - Only visible on desktop */}
+            <div className="hidden lg:block">
+              <ul className="flex flex-row items-center space-x-6">
                 {NAVIGATION_LINKS.map((link) => (
                   <li key={link.href}>
                     <Link
                       href={link.href}
-                      className="block py-2 lg:py-0 hover:text-blue-400 transition"
+                      className="block hover:text-blue-400 transition"
                     >
                       {link.name}
                     </Link>

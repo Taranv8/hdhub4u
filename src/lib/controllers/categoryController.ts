@@ -46,48 +46,60 @@ const mapMovieDocument = (movie: any): Movie => ({
   episodeLinks: movie.episodeLinks ?? [],
 });
 
-// Category mapping for URL slugs to database values
-const categoryMappings: { [key: string]: string } = {
-    'bollywood': 'BollyWood',
-    'hollywood': 'HollyWood',
-    'hindi-dubbed': 'Hindi Dubbed',
-    'south-hindi': 'South Hindi',
-    'web-series': 'Web Series',
-    '18': '18+',
-    '18-adult': '18+ [Adult]',
-    'sci-fi': 'Sci-Fi',
-    'action': 'Action',
-    'animation': 'Animation',
-    'animated': 'Animated',
-    'comedy': 'Comedy',
-    'crime': 'Crime',
-    'drama': 'Drama',
-    'family': 'Family',
-    'fantasy': 'Fantasy',
-    'horror': 'Horror',
-    'mystery': 'Mystery',
-    'romance': 'Romance',
-    'thriller': 'Thriller',
-    'war': 'War',
-    'western': 'Western',
-    'biography': 'Biography',
-    '300mb-movies': '300mb Movies',
-    'awards': 'Awards',
-    'gujarati': 'Gujarati',
-    'hd-movies': 'HD Movies',
-    'hq-dubs': 'HQ DUBs',
-    'south-voiceover-dubs': 'South VoiceOver Dubs',
-    'southhindidubs-voiceover': 'SouthHindiDubs [VoiceOver]',
-    'movielogy-collection': 'MovieLogy Collection',
-    'punjabi': 'Punjabi',
-    'talk': 'Talk',
-    'talks': 'TALKS',
-    'trailers': 'TRAILERs',
-    'wwe': 'WWE',
-    'tv-shows': 'TV Shows',
-    'anime': 'Anime',
-    'documentaries': 'Documentaries',
-  };
+/**
+ * Normalize a string for comparison - removes special characters, extra spaces, and lowercases
+ */
+function normalizeForComparison(str: string): string {
+  return str
+    .toLowerCase()
+    .replace(/\+/g, '')           // Remove +
+    .replace(/\[|\]/g, '')        // Remove brackets
+    .replace(/'/g, '')            // Remove apostrophes
+    .replace(/\s+/g, '')          // Remove all spaces
+    .replace(/-/g, '')            // Remove hyphens
+    .replace(/[^\w]/g, '')        // Remove remaining special chars
+    .trim();
+}
+
+/**
+ * Convert URL slug to possible database genre values
+ * Returns array of possible matches to search for
+ */
+function slugToGenreVariants(slug: string): string[] {
+  // Decode the slug
+  const decoded = decodeURIComponent(slug);
+  
+  // Common variations to try
+  const variants: string[] = [];
+  
+  // Original decoded
+  variants.push(decoded);
+  
+  // Title Case
+  const titleCase = decoded
+    .split(/[-\s]+/)
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(' ');
+  variants.push(titleCase);
+  
+  // With hyphens instead of spaces
+  variants.push(titleCase.replace(/\s+/g, '-'));
+  
+  // All lowercase
+  variants.push(decoded.toLowerCase());
+  
+  // All uppercase
+  variants.push(decoded.toUpperCase());
+  
+  // PascalCase (for BollyWood, HollyWood style)
+  const pascalCase = decoded
+    .split(/[-\s]+/)
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join('');
+  variants.push(pascalCase);
+  
+  return [...new Set(variants)]; // Remove duplicates
+}
 
 export async function getMoviesByCategory(
   category: string,
@@ -109,48 +121,121 @@ export async function getMoviesByCategory(
 
     console.log('✅ Validated - Page:', validPage, 'Limit:', validLimit, 'Skip:', skip);
 
-    // Decode category from URL
-    const decodedCategory = decodeURIComponent(category).toLowerCase();
-    console.log('🔤 Decoded category (lowercase):', decodedCategory);
-
     const { db } = await connectToDatabase();
     console.log('✅ Connected to database');
     
     const collection = db.collection('movies');
     console.log('✅ Got movies collection');
 
-    // Get the exact category name from mapping or convert slug to proper case
-    let categoryValue: string;
+    // Get all unique genres from database for matching
+    const allGenres: string[] = await collection.distinct('genre');
+    console.log('📋 Total unique genres in DB:', allGenres.length);
+    console.log('📋 All genres:', allGenres);
+
+    // Normalize the input category
+    const normalizedInput = normalizeForComparison(category);
+    console.log('🔤 Input category (original):', category);
+    console.log('🔤 Normalized input:', normalizedInput);
     
-    if (categoryMappings[decodedCategory]) {
-      categoryValue = categoryMappings[decodedCategory];
-      console.log('✅ Found in mappings:', decodedCategory, '→', categoryValue);
-    } else {
-      // Convert slug to title case as fallback
-      categoryValue = decodedCategory
+    // Show what each genre normalizes to
+    console.log('🔍 Normalized genres in DB:');
+    allGenres.forEach(g => {
+      console.log(`   "${g}" → "${normalizeForComparison(g)}"`);
+    });
+
+    // Find matching genre from database
+    let matchedGenre: string | null = null;
+    
+    // Method 1: Exact normalized match (most reliable)
+    for (const genre of allGenres) {
+      if (normalizeForComparison(genre) === normalizedInput) {
+        matchedGenre = genre;
+        console.log('✅ Method 1 - Exact normalized match:', matchedGenre);
+        break;
+      }
+    }
+
+    // Method 2: Try case-insensitive exact match on original
+    if (!matchedGenre) {
+      console.log('⚠️ Method 1 failed, trying Method 2: case-insensitive original match');
+      const decodedCategory = decodeURIComponent(category);
+      for (const genre of allGenres) {
+        if (genre.toLowerCase() === decodedCategory.toLowerCase()) {
+          matchedGenre = genre;
+          console.log('✅ Method 2 - Case-insensitive match:', matchedGenre);
+          break;
+        }
+      }
+    }
+
+    // Method 3: Try with spaces instead of hyphens
+    if (!matchedGenre) {
+      console.log('⚠️ Method 2 failed, trying Method 3: hyphen to space conversion');
+      const withSpaces = decodeURIComponent(category).replace(/-/g, ' ');
+      for (const genre of allGenres) {
+        if (genre.toLowerCase() === withSpaces.toLowerCase()) {
+          matchedGenre = genre;
+          console.log('✅ Method 3 - Hyphen to space match:', matchedGenre);
+          break;
+        }
+      }
+    }
+
+    // Method 4: Try partial/fuzzy matching
+    if (!matchedGenre) {
+      console.log('⚠️ Method 3 failed, trying Method 4: fuzzy matching');
+      const potentialMatches = allGenres.filter(genre => {
+        const normalizedGenre = normalizeForComparison(genre);
+        return normalizedGenre.includes(normalizedInput) || 
+               normalizedInput.includes(normalizedGenre);
+      });
+
+      if (potentialMatches.length > 0) {
+        matchedGenre = potentialMatches.sort((a, b) => a.length - b.length)[0];
+        console.log('✅ Method 4 - Fuzzy match:', matchedGenre);
+        console.log('   Other matches:', potentialMatches);
+      }
+    }
+
+    // Method 5: Try variant generation
+    if (!matchedGenre) {
+      console.log('⚠️ Method 4 failed, trying Method 5: variant generation');
+      const variants = slugToGenreVariants(category);
+      console.log('🔄 Generated variants:', variants);
+      
+      for (const variant of variants) {
+        for (const genre of allGenres) {
+          if (genre.toLowerCase() === variant.toLowerCase()) {
+            matchedGenre = genre;
+            console.log('✅ Method 5 - Variant match:', matchedGenre, 'from:', variant);
+            break;
+          }
+        }
+        if (matchedGenre) break;
+      }
+    }
+
+    // Final fallback
+    if (!matchedGenre) {
+      console.log('❌ ALL METHODS FAILED - Using fallback');
+      matchedGenre = category
         .split('-')
         .map(word => word.charAt(0).toUpperCase() + word.slice(1))
         .join(' ');
-      console.log('⚠️  NOT in mappings, converted to Title Case:', categoryValue);
+      console.log('   Fallback value:', matchedGenre);
+      console.log('   ⚠️ This will likely return 0 results');
     }
 
-    // Query for movies where genre array contains the category
+    // Build flexible query that matches genre case-insensitively
     const query = {
-      genre: categoryValue  // MongoDB automatically searches in arrays
+      genre: {
+        $regex: new RegExp(`^${matchedGenre.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i')
+      }
     };
 
     console.log('🔍 MongoDB Query:', JSON.stringify(query, null, 2));
+    console.log('🎯 Searching for genre:', matchedGenre);
     
-    // Test query - let's also check what we actually have
-    const sampleMovie = await collection.findOne({ genre: { $exists: true } });
-    console.log('📋 Sample movie from DB:');
-    console.log('   - Title:', sampleMovie?.title);
-    console.log('   - Genres:', sampleMovie?.genre);
-
-    // Let's also test if the exact query finds anything
-    const testCount = await collection.countDocuments(query);
-    console.log('🧪 Test count for query:', testCount);
-
     // Execute count and find in parallel for better performance
     console.log('⏳ Fetching movies from database...');
     const [moviesFromDb, totalMovies] = await Promise.all([
@@ -170,6 +255,8 @@ export async function getMoviesByCategory(
     if (moviesFromDb.length > 0) {
       console.log('   - First movie:', moviesFromDb[0].title);
       console.log('   - First movie genres:', moviesFromDb[0].genre);
+    } else if (totalMovies === 0) {
+      console.log('⚠️  No movies found. Available genres:', allGenres.slice(0, 10), '...');
     }
 
     // Map documents efficiently

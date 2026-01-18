@@ -82,111 +82,113 @@ export default function CategoryList() {
   ];
 
   return (
-    <nav className="w-screen bg-[#141414] text-white border-b border-gray-800">
-      {/* TOP BAR */}
-      <div className="flex items-center w-full px-4 py-3">
+    <>
+      <nav className="w-full bg-[#1a1a1a] text-white border-b border-gray-800">
+        {/* TOP BAR */}
+        <div className="flex items-center justify-between w-full px-4 py-2.5">
 
-        {/* Logo */}
-        <Link 
-  href="https://4khdhub.dad/" 
-  className="flex items-center gap-2 bg-[#FFC107] text-black px-4 py-2 rounded font-semibold shrink-0"
-  target="_blank"
-  rel="noopener noreferrer"
->
-  <TheatersIcon className="w-5 h-5" />
-  <span className="text-lg">4KHDHub</span>
-</Link>
+          {/* Mobile Menu Button (Left on mobile) */}
+          <button
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            className="lg:hidden text-white mr-3"
+          >
+            {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+          </button>
 
-        {/* Desktop Navigation */}
-        <div className="hidden lg:flex items-center gap-6 flex-1 ml-8">
-          {mainCategories.map((category, index) => (
-            <Link
-              key={index}
-              href={category.link || '/'}
-              className="flex items-center gap-1 hover:text-yellow-500 transition-colors whitespace-nowrap text-sm font-medium"
-            >
-              {category.icon}
-              <span>{category.name}</span>
-            </Link>
-          ))}
+          {/* Logo */}
+          <Link 
+            href="https://4khdhub.dad/" 
+            className="flex items-center gap-2 bg-[#FFC107] text-black px-3 py-1.5 rounded font-semibold shrink-0"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <TheatersIcon className="w-5 h-5" />
+            <span className="text-base">4KHDHub</span>
+          </Link>
 
-          {/* All Genres Dropdown */}
-          <div className="relative">
-            <button
-              onClick={() => setIsGenresOpen(!isGenresOpen)}
-              className="flex items-center gap-1 hover:text-yellow-500 text-sm font-medium"
-            >
-              All Categories
-              <ChevronDown className="w-4 h-4" />
-            </button>
-
-            {isGenresOpen && (
-              <div className="absolute top-full mt-2 bg-[#444444] border border-gray-700 rounded shadow-lg py-2 w-[300px] max-h-[500px] overflow-y-auto z-50 grid grid-cols-2 gap-1">
-                {allGenres.map(item => (
-                  <Link
-                    key={item}
-                    href={`/category/${getCategorySlug(item)}`}
-                    className="block px-4 py-2 text-sm hover:bg-gray-800 rounded"
-                    onClick={() => setIsGenresOpen(false)}
-                  >
-                    {item}
-                  </Link>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Search Box (Right aligned) */}
-        <div className="ml-auto flex items-center">
-          <SearchBox />
-        </div>
-
-        {/* Mobile Menu Button */}
-        <button
-          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          className="lg:hidden ml-4 text-yellow-500"
-        >
-          {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-        </button>
-      </div>
-
-      {/* MOBILE MENU */}
-      {isMobileMenuOpen && (
-        <div className="lg:hidden bg-[#1a1a1a] border-t border-gray-700 px-4 py-4 max-h-[80vh] overflow-y-auto">
-          <div className="flex flex-col gap-3">
-            {/* Main Categories */}
+          {/* Desktop Navigation */}
+          <div className="hidden lg:flex items-center gap-6 flex-1 ml-8">
             {mainCategories.map((category, index) => (
               <Link
                 key={index}
                 href={category.link || '/'}
-                className="flex items-center gap-2 hover:text-yellow-500 py-2 text-sm font-medium"
-                onClick={() => setIsMobileMenuOpen(false)}
+                className="flex items-center gap-1 hover:text-yellow-400 transition-colors whitespace-nowrap text-sm font-medium"
               >
                 {category.icon}
                 <span>{category.name}</span>
               </Link>
             ))}
-            
-            {/* All Genres */}
-            <div className="border-t border-gray-700 pt-3 mt-2">
-              <p className="text-xs text-gray-400 mb-2 font-semibold">ALL CATEGORIES</p>
-              <div className="grid grid-cols-2 gap-2">
-                {allGenres.map(item => (
-                  <Link
-                    key={item}
-                    href={`/category/${getCategorySlug(item)}`}
-                    className="block py-2 px-2 text-sm hover:text-yellow-500 hover:bg-gray-800 rounded"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                  >
-                    {item}
-                  </Link>
-                ))}
+
+            {/* All Genres Dropdown */}
+            <div className="relative">
+              <button
+                onClick={() => setIsGenresOpen(!isGenresOpen)}
+                className="flex items-center gap-1 hover:text-yellow-400 text-sm font-medium"
+              >
+                All Categories
+                <ChevronDown className="w-4 h-4" />
+              </button>
+
+              {isGenresOpen && (
+                <div className="absolute top-full mt-2 bg-[#2a2a2a] border border-gray-700 rounded shadow-lg py-2 w-[300px] max-h-[500px] overflow-y-auto z-50 grid grid-cols-2 gap-1">
+                  {allGenres.map(item => (
+                    <Link
+                      key={item}
+                      href={`/category/${getCategorySlug(item)}`}
+                      className="block px-4 py-2 text-sm hover:bg-gray-800 hover:text-yellow-400 rounded"
+                      onClick={() => setIsGenresOpen(false)}
+                    >
+                      {item}
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Search Box (Right aligned) */}
+          <div className="ml-auto lg:ml-4">
+            <SearchBox />
+          </div>
+        </div>
+
+        {/* MOBILE MENU */}
+        {isMobileMenuOpen && (
+          <div className="lg:hidden bg-[#252525] border-t border-gray-700 px-4 py-4 max-h-[80vh] overflow-y-auto">
+            <div className="flex flex-col gap-3">
+              {/* Main Categories */}
+              {mainCategories.map((category, index) => (
+                <Link
+                  key={index}
+                  href={category.link || '/'}
+                  className="flex items-center gap-2 hover:text-yellow-400 py-2 text-sm font-medium"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  {category.icon}
+                  <span>{category.name}</span>
+                </Link>
+              ))}
+              
+              {/* All Genres */}
+              <div className="border-t border-gray-700 pt-3 mt-2">
+                <p className="text-xs text-gray-400 mb-2 font-semibold">ALL CATEGORIES</p>
+                <div className="grid grid-cols-2 gap-2">
+                  {allGenres.map(item => (
+                    <Link
+                      key={item}
+                      href={`/category/${getCategorySlug(item)}`}
+                      className="block py-2 px-2 text-sm hover:text-yellow-400 hover:bg-gray-800 rounded"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                      {item}
+                    </Link>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      )}
-    </nav>
+        )}
+      </nav>
+    </>
   );
 }
